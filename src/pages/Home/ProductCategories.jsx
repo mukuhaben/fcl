@@ -41,15 +41,33 @@ const CategoryCard = ({ category }) => (
             boxShadow: 'none',
             border: '1px solid #f0f0f0',
             borderRadius: 1,
-            overflow: 'visible',
-            position: 'relative',
             p: 2,
+            position: 'relative',
             '&:hover': {
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }
         }}
     >
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2, pt: 0 }}>
+        {/* Cashback Badge */}
+        <Box
+            sx={{
+                position: 'absolute',
+                top: 8,
+                left: 8,
+                backgroundColor: 'success.light',
+                color: 'success.dark',
+                borderRadius: 1,
+                px: 1.5,
+                py: 0.5,
+                fontSize: 12,
+                fontWeight: 500
+            }}
+        >
+            {category.cashback}% Cashback
+        </Box>
+
+        {/* Image */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 4, mb: 2 }}>
             <CardMedia
                 component="img"
                 image={category.image}
@@ -57,91 +75,75 @@ const CategoryCard = ({ category }) => (
                 sx={{ width: 120, height: 120, objectFit: 'contain' }}
             />
         </Box>
-        <Typography variant="body1" gutterBottom>{category.name}</Typography>
-        <Typography variant="body2" color="text.secondary">From</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'baseline', mt: 0.5 }}>
-            <Typography variant="body2" color="text.secondary">
-                1  pc
-            </Typography>
-            <Typography
-                variant="body2"
-                fontWeight="medium"
-                sx={{ ml: 0.5 }}
-            >
-                KSH {category.price}
-            </Typography>
-            <Typography
-                variant="caption"
-                sx={{
-                    ml: 0.5,
-                    color: 'success.main',
-                    fontWeight: 'medium'
-                }}
-            >
-                +{category.cashback}% cashback
-            </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'baseline', mt: 0.5 }}>
-            <Typography variant="body2" color="text.secondary">
-                1 - 6 pc
-            </Typography>
-            <Typography
-                variant="body2"
-                fontWeight="medium"
-                sx={{ ml: 0.5 }}
-            >
-                KSH {category.price}
-            </Typography>
-            <Typography
-                variant="caption"
-                sx={{
-                    ml: 0.5,
-                    color: 'success.main',
-                    fontWeight: 'medium'
-                }}
-            >
-                +{category.cashback}% cashback
-            </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'baseline', mt: 0.5 }}>
-            <Typography variant="body2" color="text.secondary">
-                1 -12 pc
-            </Typography>
-            <Typography
-                variant="body2"
-                fontWeight="medium"
-                sx={{ ml: 0.5 }}
-            >
-                KSH {category.price}
-            </Typography>
-            <Typography
-                variant="caption"
-                sx={{
-                    ml: 0.5,
-                    color: 'success.main',
-                    fontWeight: 'medium'
-                }}
-            >
-                +{category.cashback}% cashback
-            </Typography>
+
+        {/* Item code (fake for now) */}
+        <Typography variant="body2" color="text.secondary" fontWeight="bold">
+            Item code: XXXXX
+        </Typography>
+
+        {/* Item description */}
+        <Typography variant="body1" sx={{ fontWeight: 500, my: 1 }}>
+            {category.name} - This is a sample product description.
+        </Typography>
+
+        {/* Tiered Pricing Boxes */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+            {[ 
+                { label: '1 - 3 Pc', price: category.price },
+                { label: '4 - 11 Pc', price: category.price * 1.05 }, // example tier
+                { label: '12+ Pc', price: category.price * 0.95 } // example tier
+            ].map((tier, idx) => (
+                <Box
+                    key={idx}
+                    sx={{
+                        flex: 1,
+                        border: '1px solid #ccc',
+                        borderRadius: 1,
+                        p: 1,
+                        textAlign: 'center',
+                        fontSize: 12
+                    }}
+                >
+                    <Typography variant="body2" fontWeight={600}>{tier.label}</Typography>
+                    <Typography variant="body2">KSH {tier.price.toLocaleString()}</Typography>
+                </Box>
+            ))}
         </Box>
     </Card>
 );
 
-const ProductCategories = ({header}) => {
+
+const ProductCategories = ({ header }) => {
     return (
-        <Box sx={{ px: 6, py: 2 }}>
-            <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
+        <Box sx={{ px: { xs: 2, sm: 4, md: 6 }, py: 2 }}>
+            <Typography 
+                variant="h5" 
+                gutterBottom 
+                sx={{ mb: 2, fontSize: { xs: '1.2rem', sm: '1.5rem' } }}
+            >
                 {header}
             </Typography>
             <Swiper
-                slidesPerView={6}
                 spaceBetween={20}
                 loop={true}
                 autoplay={{ delay: 3000, disableOnInteraction: false }}
                 navigation
                 modules={[Autoplay, Navigation]}
                 style={{ padding: '10px 0' }}
+                breakpoints={{
+                    0: {
+                        slidesPerView: 1,
+                    },
+                    600: {
+                        slidesPerView: 2,
+                    },
+                    900: {
+                        slidesPerView: 4,
+                    },
+                    1200: {
+                        slidesPerView: 6,
+                    }
+                }}
             >
                 {categories.map(category => (
                     <SwiperSlide key={category.id}>
@@ -152,5 +154,6 @@ const ProductCategories = ({header}) => {
         </Box>
     );
 };
+
 
 export default ProductCategories;

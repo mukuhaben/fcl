@@ -214,7 +214,7 @@ export default function Cart() {
                           }}
                           IconComponent={KeyboardArrowDown}
                         >
-                          {['1', '1-6', '1-12'].map((num) => (
+                          {['1-3 Pc', '4-11 Pc', '12+ Pc'].map((num) => (
                             <MenuItem key={num} value={num}>
                               {num}
                             </MenuItem>

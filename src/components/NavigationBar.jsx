@@ -1,103 +1,287 @@
-import { useState } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  InputBase, 
-  Box, 
+import React, { useState } from 'react';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  InputBase,
+  Box,
   IconButton,
   Badge,
   Container,
-  Button
+  Button,
+  Menu,
+  MenuItem,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemButton,
+  Collapse,
+  useMediaQuery,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import PersonIcon from '@mui/icons-material/Person';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import { styled, alpha } from '@mui/material/styles';
+import {
+  Menu as MenuIcon,
+  Search as SearchIcon,
+  ShoppingCart as ShoppingCartIcon,
+  Person as PersonIcon,
+  Favorite as FavoriteIcon,
+  ExpandMore as ChevronDownIcon,
+  ChevronRight as ChevronRightIcon,
+  ExpandLess,
+  ExpandMore,
+} from '@mui/icons-material';
+import { styled, alpha, useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import FirstCraftLogo from '../assets/images/FirstCraft-logo.png';
 
+// Styled Components
+const Search = styled('div')(({ theme }) => ({
+  position: 'relative',
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: alpha(theme.palette.common.white, 0.15),
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.common.white, 0.25),
+  },
+  marginRight: theme.spacing(2),
+  marginLeft: 0,
+  width: '100%',
+  [theme.breakpoints.up('sm')]: {
+    marginLeft: theme.spacing(3),
+    width: 'auto',
+  },
+}));
 
-// Navigation link button
+const SearchIconWrapper = styled('div')(({ theme }) => ({
+  padding: theme.spacing(0, 2),
+  height: '100%',
+  position: 'absolute',
+  pointerEvents: 'none',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: theme.palette.grey[500],
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  color: 'inherit',
+  width: '100%',
+  '& .MuiInputBase-input': {
+    padding: theme.spacing(1, 1, 1, 0),
+    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+    transition: theme.transitions.create('width'),
+    width: '100%',
+    [theme.breakpoints.up('md')]: {
+      width: '20ch',
+    },
+  },
+}));
+
 const NavButton = styled(Button)(({ theme }) => ({
   color: 'white',
   textTransform: 'none',
-  padding: '8px 16px',
+  padding: '4px 8px',
+  fontSize: '12px',
+  minWidth: 'unset',
   '&:hover': {
     backgroundColor: alpha(theme.palette.common.white, 0.15),
-  }
+  },
 }));
 
-// Main NavBar component
 const NavigationBar = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Menu state
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [openMenu, setOpenMenu] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerSubmenus, setDrawerSubmenus] = useState({});
+
+  const menus = {
+    'Office Essentials': ['Paper Products', 'Writing Instruments', 'Binders & Filing'],
+    'Toners & Inks': ['HP Toners', 'Canon Inks', 'Brother Cartridges'],
+    'Office Machines': ['Printers', 'Shredders', 'Laminators'],
+  };
+
+  const handleMenuOpen = (event, menuName) => {
+    setAnchorEl(event.currentTarget);
+    setOpenMenu(menuName);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setOpenMenu('');
+  };
+
+  const toggleDrawer = () => {
+    setDrawerOpen((prev) => !prev);
+  };
+
+  const toggleSubmenu = (key) => {
+    setDrawerSubmenus((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
 
   return (
-    <AppBar position="static" sx={{ boxShadow: 0 }}>
-      {/* Top Toolbar - Logo and actions */}
-      <Container maxWidth="xl">
-        <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
-          {/* Logo */}
-          <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => navigate('/')}>
-      
-              <img 
-                src={FirstCraftLogo}
-                alt="FirstCraft Logo" 
-                height="40"
-                style={{ marginRight: '8px' }}
-              />
-
-          </Box>
-
-          {/* Right actions */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {/* Search */}
-            <Search>
-              <SearchIconWrapper>
-                <SearchIcon />
-              </SearchIconWrapper>
-              <StyledInputBase
-                placeholder="Search..."
-                inputProps={{ 'aria-label': 'search' }}
-              />
-            </Search>
-
-            {/* Icons */}
-            <IconButton color="inherit" size="large" onClick={() => navigate('/wishlist')}>
-              <FavoriteIcon />
-            </IconButton>
-            <IconButton color="inherit" size="large" onClick={() => navigate('/account')}>
-              <PersonIcon />
-            </IconButton>
-            <IconButton color="inherit" size="large" onClick={() => navigate('/cart')}>
-              <Badge badgeContent={0} color="error">
-                <ShoppingCartIcon />
-              </Badge>
-            </IconButton>
-          </Box>
-        </Toolbar>
-      </Container>
-
-      {/* Bottom Toolbar - Navigation Links */}
-      <Box sx={{ bgcolor: '#005DB3', width: '100%' }}>
+    <>
+      <AppBar position="static" sx={{ boxShadow: 0,backgroundColor: '#FFF' }}>
+        {/* Top Toolbar */}
         <Container maxWidth="xl">
-          <Toolbar disableGutters sx={{ minHeight: '48px', overflowX: 'auto' }}>
-            <NavButton>Special Offer</NavButton>
-            <NavButton>Office Essentials</NavButton>
-            <NavButton>Toners & Inks</NavButton>
-            <NavButton>Office Machines</NavButton>
-            <NavButton>School Supplies</NavButton>
-            <NavButton>Stapling & Punching</NavButton>
-            <NavButton>IT Accessories</NavButton>
-            <NavButton>Office Furniture</NavButton>
-            <NavButton>More</NavButton>
-            <NavButton>ALL Brands</NavButton>
-            <NavButton>Contact Us</NavButton>
+          <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
+            {/* Logo */}
+            <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => navigate('/')}>
+              <Typography
+                variant="h6"
+                noWrap
+                sx={{
+                  fontWeight: 700,
+                  color: 'white',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <Box
+                  component="img"
+                  src={FirstCraftLogo}
+                  alt="FirstCraft Logo"
+                  sx={{
+                    height: { xs: '30px', sm: '40px' }, // Responsive height
+                    marginRight: '8px',
+                  }}
+                />
+              </Typography>
+            </Box>
+
+            {/* Right side */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, backgroundColor: '#005DB3' }}>
+              {!isMobile && (
+                <Search>
+                  <SearchIconWrapper>
+                    <SearchIcon />
+                  </SearchIconWrapper>
+                  <StyledInputBase placeholder="Search..." inputProps={{ 'aria-label': 'search' }} />
+                </Search>
+              )}
+              <IconButton color="inherit" onClick={() => navigate('/wishlist')}>
+                <FavoriteIcon />
+              </IconButton>
+              <IconButton color="inherit" onClick={() => navigate('/account')}>
+                <PersonIcon />
+              </IconButton>
+              <IconButton color="inherit" onClick={() => navigate('/cart')}>
+                <Badge badgeContent={0} color="error">
+                  <ShoppingCartIcon />
+                </Badge>
+              </IconButton>
+              {isMobile && (
+                <IconButton color="inherit" onClick={toggleDrawer}>
+                  <MenuIcon />
+                </IconButton>
+              )}
+            </Box>
           </Toolbar>
         </Container>
-      </Box>
-    </AppBar>
+
+        {/* Bottom Toolbar */}
+        {!isMobile && (
+          <Box sx={{ bgcolor: '#005DB3', width: '100%' }}>
+            <Container maxWidth="xl">
+              <Toolbar disableGutters sx={{ minHeight: '40px', overflowX: 'auto' }}>
+                <NavButton>Special Offer</NavButton>
+
+                {Object.keys(menus).map((menuName) => (
+                  <Box key={menuName} onMouseLeave={handleMenuClose}>
+                    <NavButton
+                      onMouseEnter={(e) => handleMenuOpen(e, menuName)}
+                      endIcon={<ChevronDownIcon fontSize="small" />}
+                    >
+                      {menuName}
+                    </NavButton>
+                    <Menu
+                      anchorEl={anchorEl}
+                      open={openMenu === menuName}
+                      onClose={handleMenuClose}
+                      MenuListProps={{
+                        onMouseEnter: () => {},
+                        onMouseLeave: handleMenuClose,
+                      }}
+                    >
+                      {menus[menuName].map((item, index) => (
+                        <MenuItem key={index} onClick={handleMenuClose}>
+                          {item}
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                  </Box>
+                ))}
+
+                <NavButton>School Supplies</NavButton>
+                <NavButton>Stapling & Punching</NavButton>
+                <NavButton>IT Accessories</NavButton>
+                <NavButton>Office Furniture</NavButton>
+                <NavButton>More</NavButton>
+                <NavButton>ALL Brands</NavButton>
+                <NavButton>Contact Us</NavButton>
+              </Toolbar>
+            </Container>
+          </Box>
+        )}
+      </AppBar>
+
+      {/* Mobile Drawer */}
+      <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer}>
+        <Box sx={{ width: 260 }} role="presentation">
+          <List>
+            <ListItem disablePadding>
+              <ListItemButton>
+                <ListItemText primary="Special Offer" />
+              </ListItemButton>
+            </ListItem>
+
+            {Object.keys(menus).map((menuName) => (
+              <React.Fragment key={menuName}>
+                <ListItem disablePadding>
+                  <ListItemButton onClick={() => toggleSubmenu(menuName)}>
+                    <ListItemText primary={menuName} />
+                    {drawerSubmenus[menuName] ? <ExpandLess /> : <ChevronRightIcon />}
+                  </ListItemButton>
+                </ListItem>
+                <Collapse in={drawerSubmenus[menuName]} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {menus[menuName].map((subItem, index) => (
+                      <ListItemButton key={index} sx={{ pl: 4 }}>
+                        <ListItemText primary={subItem} />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                </Collapse>
+              </React.Fragment>
+            ))}
+
+            {/* Static Items */}
+            {[
+              'School Supplies',
+              'Stapling & Punching',
+              'IT Accessories',
+              'Office Furniture',
+              'More',
+              'ALL Brands',
+              'Contact Us',
+            ].map((item, index) => (
+              <ListItem disablePadding key={index}>
+                <ListItemButton>
+                  <ListItemText primary={item} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
+    </>
   );
 };
 
