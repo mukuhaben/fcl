@@ -56,44 +56,7 @@ const HeroSection = () => {
           }}
         >
           {/* Categories */}
-          <Box
-            sx={{
-              width: { xs: '100%', md: '25%' },
-              bgcolor: 'white',
-              borderRight: { md: '1px solid #f0f0f0' },
-              borderBottom: { xs: '1px solid #f0f0f0', md: 'none' },
-            }}
-          >
-            <List disablePadding>
-              {categories.map((category, index) => (
-                <CategoryItem
-                  key={index}
-                  active={category === activeCategory}
-                  onClick={() => {
-                    setActiveCategory(category);
-                    navigate('/product-details');
-                  }}
-                  sx={{
-                    py: 1.5,
-                    color: category === activeCategory ? '#1976d2' : 'inherit',
-                  }}
-                >
-                  <ListItemText
-                    primary={category}
-                    primaryTypographyProps={{
-                      sx: {
-                        color:
-                          category === activeCategory
-                            ? '#1976d2'
-                            : 'text.primary',
-                        fontSize: '0.875rem',
-                      },
-                    }}
-                  />
-                </CategoryItem>
-              ))}
-            </List>
-          </Box>
+        
 
           {/* Banner */}
           <Box
@@ -116,105 +79,29 @@ const HeroSection = () => {
               }}
             />
           </Box>
-
-          {/* User Actions */}
           <Box
             sx={{
-              width: { xs: '100%', md: '25%' },
-              bgcolor: 'white',
-              p: 2,
+              width: { xs: '100%', md: '50%' },
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRight: { md: '1px solid #f0f0f0' },
+              borderBottom: { xs: '1px solid #f0f0f0', md: 'none' },
             }}
           >
-            {/* Welcome Box */}
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                mb: 3,
+            <img
+              src={banner}
+              alt="Banner"
+              style={{
+                width: '100%',
+                height: 'auto',
+                objectFit: 'contain',
               }}
-            >
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 1,
-                  bgcolor: '#f0f2f5',
-                  borderRadius: '50%',
-                  color: '#6c757d',
-                }}
-              >
-                👤
-              </Box>
-              <Typography variant="body1" align="center" sx={{ mb: 0.5, fontWeight: 500 }}>
-                Hi, user
-              </Typography>
-              <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 2 }}>
-                let's get started
-              </Typography>
-              <Button
-                fullWidth
-                variant="contained"
-                sx={{
-                  mb: 1,
-                  bgcolor: '#0d6efd',
-                  textTransform: 'none',
-                  fontSize: '0.875rem',
-                  borderRadius: 1,
-                  py: 1,
-                }}
-              >
-                Join now
-              </Button>
-              <Button
-                fullWidth
-                variant="outlined"
-                sx={{
-                  color: '#0d6efd',
-                  borderColor: '#0d6efd',
-                  textTransform: 'none',
-                  fontSize: '0.875rem',
-                  borderRadius: 1,
-                  py: 1,
-                }}
-              >
-                Log in
-              </Button>
-            </Box>
-
-            {/* Promo Boxes */}
-            <Box
-              sx={{
-                bgcolor: '#f77f14',
-                color: 'white',
-                p: 2,
-                borderRadius: 1,
-                mb: 2,
-              }}
-            >
-              <Typography variant="body1" fontWeight="bold">
-                Get US KSH 10 off
-              </Typography>
-              <Typography variant="body2">with a new supplier</Typography>
-            </Box>
-
-            <Box
-              sx={{
-                bgcolor: '#17a2b8',
-                color: 'white',
-                p: 2,
-                borderRadius: 1,
-              }}
-            >
-              <Typography variant="body1" fontWeight="bold">
-                Send quotes with
-              </Typography>
-              <Typography variant="body2">supplier preferences</Typography>
-            </Box>
+            />
           </Box>
+
+          {/* User Actions */}
+       
         </Box>
       </Paper>
     </Box>

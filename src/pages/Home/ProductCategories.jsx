@@ -22,14 +22,14 @@ import homeApplianceImage from '../../assets/images/10.png';
 import coffeeMakerImage from '../../assets/images/13.png';
 
 const categories = [
-    { id: 1, name: 'Soft chairs', price: 19, cashback: 5, image: softChairsImage },
-    { id: 2, name: 'Sofa & chair', price: 19, cashback: 3, image: sofaChairImage },
-    { id: 3, name: 'Kitchen dishes', price: 19, cashback: 7, image: kitchenDishesImage },
-    { id: 4, name: 'Smart watches', price: 19, cashback: 10, image: smartWatchesImage },
-    { id: 5, name: 'Kitchen mixer', price: 100, cashback: 15, image: kitchenMixerImage },
-    { id: 6, name: 'Blenders', price: 39, cashback: 8, image: blendersImage },
-    { id: 7, name: 'Home appliance', price: 19, cashback: 6, image: homeApplianceImage },
-    { id: 8, name: 'Coffee maker', price: 10, cashback: 12, image: coffeeMakerImage }
+    { id: 1, name: 'Soft chairs', price: 1900000, cashback: 5, image: softChairsImage },
+    { id: 2, name: 'Sofa & chair', price: 1900000, cashback: 3, image: sofaChairImage },
+    { id: 3, name: 'Kitchen dishes', price: 1900000, cashback: 7, image: kitchenDishesImage },
+    { id: 4, name: 'Smart watches', price: 1900000, cashback: 10, image: smartWatchesImage },
+    { id: 5, name: 'Kitchen mixer', price: 10000000, cashback: 15, image: kitchenMixerImage },
+    { id: 6, name: 'Blenders', price: 3900000, cashback: 8, image: blendersImage },
+    { id: 7, name: 'Home appliance', price: 1900000, cashback: 6, image: homeApplianceImage },
+    { id: 8, name: 'Coffee maker', price: 1000000, cashback: 12, image: coffeeMakerImage }
 ];
 
 const CategoryCard = ({ category }) => (
@@ -49,7 +49,7 @@ const CategoryCard = ({ category }) => (
         }}
     >
         {/* Cashback Badge */}
-        <Box
+        {/* <Box
             sx={{
                 position: 'absolute',
                 top: 8,
@@ -64,10 +64,30 @@ const CategoryCard = ({ category }) => (
             }}
         >
             {category.cashback}% Cashback
-        </Box>
+        </Box> */}
+        <Typography
+            variant="body2"
+            color="white"
+            fontWeight="bold"
+            sx={{
+                position: 'absolute',
+                top: 8,
+                left: 8,
+                backgroundColor: 'red',
+                borderRadius: 1,
+                px: 1.5,
+                py: 0.5,
+                fontSize: 18,
+                fontWeight: 700,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                zIndex: 1
+            }}
+        >
+            {category.cashback}% Cashback
+        </Typography>
 
         {/* Image */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 4, mb: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 6, mb: 2 }}>
             <CardMedia
                 component="img"
                 image={category.image}
@@ -105,7 +125,7 @@ const CategoryCard = ({ category }) => (
                     }}
                 >
                     <Typography variant="body2" fontWeight={600}>{tier.label}</Typography>
-                    <Typography variant="body2">KSH {tier.price.toLocaleString()}</Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>{tier.price.toLocaleString()} /= </Typography>
                 </Box>
             ))}
         </Box>
