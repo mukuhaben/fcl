@@ -111,7 +111,7 @@ const CategoryCard = ({ category }) => (
             {[ 
                 { label: '1 - 3 Pc', price: category.price },
                 { label: '4 - 11 Pc', price: category.price * 1.05 }, // example tier
-                { label: '12+ Pc', price: category.price * 0.95 } // example tier
+                { label: '12Pc +', price: category.price * 0.95 } // example tier
             ].map((tier, idx) => (
                 <Box
                     key={idx}
