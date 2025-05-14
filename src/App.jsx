@@ -8,6 +8,8 @@ import NavigationBar from './components/NavigationBar';
 import Footer from './components/Footer';
 import ProductDetails from './pages/ProductDetails/View/Index';
 import Cart from './pages/Cart/View/Index';
+import RegisterPage from './pages/Registration/View/Index';
+import LoginPage from './pages/Login/View/Index';
 
 function App() {
   // Detect preferred color scheme (light/dark mode)
@@ -88,6 +90,9 @@ function App() {
             <Routes>
               <Route path="/" element={<IndexPage />} />
               <Route path="/product-details" element={<ProductDetails />} />
+              <Route path="/product-details/:id" element={<ProductDetails />} />
+              <Route path='/register' element={<RegisterPage />} />
+              <Route path='/login' element={<LoginPage />} />
               <Route path="/cart" element={<Cart />} />
             </Routes>
           </main>
