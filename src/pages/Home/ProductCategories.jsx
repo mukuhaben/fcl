@@ -40,31 +40,16 @@ const CategoryCard = ({ category }) => (
             flexDirection: 'column',
             boxShadow: 'none',
             border: '1px solid #f0f0f0',
-            borderRadius: 1,
-            p: 2,
+            borderRadius: 2,
+            p: 3,
             position: 'relative',
+            minHeight: 350,
             '&:hover': {
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }
         }}
     >
         {/* Cashback Badge */}
-        {/* <Box
-            sx={{
-                position: 'absolute',
-                top: 8,
-                left: 8,
-                backgroundColor: 'success.light',
-                color: 'success.dark',
-                borderRadius: 1,
-                px: 1.5,
-                py: 0.5,
-                fontSize: 12,
-                fontWeight: 500
-            }}
-        >
-            {category.cashback}% Cashback
-        </Box> */}
         <Typography
             variant="body2"
             color="white"
@@ -92,11 +77,11 @@ const CategoryCard = ({ category }) => (
                 component="img"
                 image={category.image}
                 alt={category.name}
-                sx={{ width: 120, height: 120, objectFit: 'contain' }}
+                sx={{ width: 160, height: 160, objectFit: 'contain' }}
             />
         </Box>
 
-        {/* Item code (fake for now) */}
+        {/* Item code */}
         <Typography variant="body2" color="text.secondary" fontWeight="bold">
             Item code: XXXXX
         </Typography>
@@ -106,12 +91,20 @@ const CategoryCard = ({ category }) => (
             {category.name} - This is a sample product description.
         </Typography>
 
-        {/* Tiered Pricing Boxes */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-            {[ 
+        {/* Responsive Pricing */}
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                justifyContent: 'space-between',
+                gap: 1,
+                mt: 'auto' // pushes pricing to the bottom of card
+            }}
+        >
+            {[
                 { label: '1 - 3 Pc', price: category.price },
-                { label: '4 - 11 Pc', price: category.price * 1.05 }, // example tier
-                { label: '12Pc +', price: category.price * 0.95 } // example tier
+                { label: '4 - 11 Pc', price: category.price * 1.05 },
+                { label: '12Pc +', price: category.price * 0.95 }
             ].map((tier, idx) => (
                 <Box
                     key={idx}
@@ -131,6 +124,7 @@ const CategoryCard = ({ category }) => (
         </Box>
     </Card>
 );
+
 
 
 const ProductCategories = ({ header }) => {

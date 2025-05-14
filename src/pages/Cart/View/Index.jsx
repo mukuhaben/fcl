@@ -214,7 +214,7 @@ export default function Cart() {
                           }}
                           IconComponent={KeyboardArrowDown}
                         >
-                          {['1-3 Pc', '4-11 Pc', '12+ Pc'].map((num) => (
+                          {['1-3 Pc', '4-11 Pc', '12 Pc+'].map((num) => (
                             <MenuItem key={num} value={num}>
                               {num}
                             </MenuItem>
@@ -453,7 +453,7 @@ export default function Cart() {
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body1">CashBack:</Typography>
-                <Typography variant="body1" color="primary">+ KSH{tax.toFixed(2)}</Typography>
+                <Typography variant="body1" color="error">- KSH{tax.toFixed(2)}</Typography>
               </Box>
             </Stack>
             

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import {
-  Grid, Card, CardContent, CardMedia, Typography,
+  Grid, Typography,
   Button, IconButton, Select, MenuItem, FormControl,
-  InputLabel, Pagination, Stack, Drawer, Chip, Slider,
+  InputLabel, Pagination, Stack, Drawer, Slider,
   Box
 } from '@mui/material';
 import { GridView, ViewList, FilterList } from '@mui/icons-material';
@@ -29,6 +29,92 @@ const mockProducts = [
   { id: 8, name: 'Coffee Maker', price: 49.99, image: coffeeMakerImage, ranges: [{ cashback: 8 }] },
 ];
 
+const CategoryCard = ({ category }) => (
+  <Box
+    sx={{
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      boxShadow: 'none',
+      border: '1px solid #f0f0f0',
+      borderRadius: 2,
+      p: 2,
+      position: 'relative',
+      '&:hover': {
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      }
+    }}
+  >
+    {category.ranges?.[0]?.cashback && (
+      <Typography
+        variant="body2"
+        color="white"
+        fontWeight="bold"
+        sx={{
+          position: 'absolute',
+          top: 8,
+          left: 8,
+          backgroundColor: 'red',
+          borderRadius: 1,
+          px: 1.5,
+          py: 0.5,
+          fontSize: 18,
+          fontWeight: 700,
+          zIndex: 1
+        }}
+      >
+        {category.ranges[0].cashback}% Cashback
+      </Typography>
+    )}
+
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 6, mb: 2 }}>
+      <img
+        src={category.image}
+        alt={category.name}
+        style={{ width: 160, height: 160, objectFit: 'contain' }}
+      />
+    </Box>
+
+    <Typography variant="body2" color="text.secondary" fontWeight="bold">
+      Item code: XXXXX
+    </Typography>
+
+    <Typography variant="body1" sx={{ fontWeight: 500, my: 1 }}>
+      {category.name} - This is a sample product description.
+    </Typography>
+
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between',
+        gap: 1
+      }}
+    >
+      {[ 
+        { label: '1 - 3 Pc', price: category.price },
+        { label: '4 - 11 Pc', price: category.price * 1.05 },
+        { label: '12Pc +', price: category.price * 0.95 }
+      ].map((tier, idx) => (
+        <Box
+          key={idx}
+          sx={{
+            flex: 1,
+            border: '1px solid #ccc',
+            borderRadius: 1,
+            p: 1,
+            textAlign: 'center',
+            fontSize: 12
+          }}
+        >
+          <Typography variant="body2" fontWeight={600}>{tier.label}</Typography>
+          <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>{tier.price.toLocaleString()} /= </Typography>
+        </Box>
+      ))}
+    </Box>
+  </Box>
+);
+
 const ProductList = () => {
   const [view, setView] = useState('grid');
   const [sort, setSort] = useState('');
@@ -43,15 +129,13 @@ const ProductList = () => {
   const toggleDrawer = () => setDrawerOpen(!drawerOpen);
 
   return (
-    <Box sx={{ p: 2, px: { xs: 2, md: 15 } }}>  
+    <Box sx={{ p: 2, px: { xs: 2, md: 15 } }}>
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1}
         alignItems={{ xs: 'stretch', sm: 'center' }}
         justifyContent="space-between"
         sx={{ mb: 2 }}
-    //     p={2}
-    //     px={{ xs: 2, md: 15 }}
       >
         <Stack direction="row" spacing={1} alignItems="center">
           <Button startIcon={<FilterList />} onClick={toggleDrawer} sx={{ display: { xs: 'inline-flex', md: 'none' } }}>
@@ -86,41 +170,7 @@ const ProductList = () => {
           <Grid container spacing={2}>
             {mockProducts.map(product => (
               <Grid item xs={12} sm={6} md={4} key={product.id}>
-                <Card
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    boxShadow: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%',
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    image={product.image}
-                    alt={product.name}
-                    sx={{ width: '100%', height: 180, objectFit: 'contain', borderRadius: 1 }}
-                  />
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography variant="subtitle1" fontWeight={600} noWrap>
-                      {product.name}
-                    </Typography>
-                    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                      <Typography variant="h6" color="primary">
-                        {formatPrice(product.price)}
-                      </Typography>
-                      {product.originalPrice && (
-                        <Typography variant="body2" sx={{ textDecoration: 'line-through', color: 'gray' }}>
-                          {formatPrice(product.originalPrice)}
-                        </Typography>
-                      )}
-                    </Stack>
-                    {product.ranges[0]?.cashback && (
-                      <Chip label={`${product.ranges[0].cashback}% Cashback`} color="success" size="small" sx={{ mt: 1 }} />
-                    )}
-                  </CardContent>
-                </Card>
+                <CategoryCard category={product} />
               </Grid>
             ))}
           </Grid>
