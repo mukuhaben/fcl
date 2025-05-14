@@ -77,13 +77,13 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 const NavButton = styled(Button)(({ theme }) => ({
-  color: 'white',
+  color: theme.palette.primary.contrastText,
   textTransform: 'none',
   padding: '4px 8px',
   fontSize: '12px',
   minWidth: 'unset',
   '&:hover': {
-    backgroundColor: alpha(theme.palette.common.white, 0.15),
+    backgroundColor: alpha(theme.palette.primary.contrastText, 0.15),
   },
 }));
 
@@ -92,7 +92,6 @@ const NavigationBar = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Menu state
   const [anchorEl, setAnchorEl] = useState(null);
   const [openMenu, setOpenMenu] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -127,37 +126,43 @@ const NavigationBar = () => {
 
   return (
     <>
-      <AppBar position="static" sx={{ boxShadow: 0,backgroundColor: '#FFF' }}>
-        {/* Top Toolbar */}
+      <AppBar
+        position="static"
+        sx={{
+          boxShadow: 0,
+          backgroundColor: theme.palette.background.paper,
+          color: theme.palette.text.primary,
+        }}
+      >
         <Container maxWidth="xl">
           <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
             {/* Logo */}
             <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => navigate('/')}>
-              <Typography
-                variant="h6"
-                noWrap
-                sx={{
-                  fontWeight: 700,
-                  color: 'white',
-                  textDecoration: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
+              <Typography variant="h6" noWrap sx={{ fontWeight: 700, display: 'flex', alignItems: 'center' }}>
                 <Box
                   component="img"
                   src={FirstCraftLogo}
                   alt="FirstCraft Logo"
                   sx={{
-                    height: { xs: '30px', sm: '40px' }, // Responsive height
+                    height: { xs: '30px', sm: '40px' },
                     marginRight: '8px',
                   }}
                 />
               </Typography>
             </Box>
 
-            {/* Right side */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, backgroundColor: '#005DB3' }}>
+            {/* Right Side */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                backgroundColor: theme.palette.primary.main,
+                color: theme.palette.primary.contrastText,
+                px: 1,
+                borderRadius: 1,
+              }}
+            >
               {!isMobile && (
                 <Search>
                   <SearchIconWrapper>
@@ -166,19 +171,19 @@ const NavigationBar = () => {
                   <StyledInputBase placeholder="Search..." inputProps={{ 'aria-label': 'search' }} />
                 </Search>
               )}
-              <IconButton color="inherit" onClick={() => navigate('/wishlist')}>
+              <IconButton sx={{ color: theme.palette.primary.contrastText }} onClick={() => navigate('/wishlist')}>
                 <FavoriteIcon />
               </IconButton>
-              <IconButton color="inherit" onClick={() => navigate('/account')}>
+              <IconButton sx={{ color: theme.palette.primary.contrastText }} onClick={() => navigate('/account')}>
                 <PersonIcon />
               </IconButton>
-              <IconButton color="inherit" onClick={() => navigate('/cart')}>
+              <IconButton sx={{ color: theme.palette.primary.contrastText }} onClick={() => navigate('/cart')}>
                 <Badge badgeContent={0} color="error">
                   <ShoppingCartIcon />
                 </Badge>
               </IconButton>
               {isMobile && (
-                <IconButton color="inherit" onClick={toggleDrawer}>
+                <IconButton sx={{ color: theme.palette.primary.contrastText }} onClick={toggleDrawer}>
                   <MenuIcon />
                 </IconButton>
               )}
@@ -188,11 +193,10 @@ const NavigationBar = () => {
 
         {/* Bottom Toolbar */}
         {!isMobile && (
-          <Box sx={{ bgcolor: '#005DB3', width: '100%' }}>
+          <Box sx={{ bgcolor: theme.palette.primary.main, width: '100%', color: theme.palette.primary.contrastText }}>
             <Container maxWidth="xl">
               <Toolbar disableGutters sx={{ minHeight: '40px', overflowX: 'auto' }}>
                 <NavButton>Special Offer</NavButton>
-
                 {Object.keys(menus).map((menuName) => (
                   <Box key={menuName} onMouseLeave={handleMenuClose}>
                     <NavButton
@@ -218,7 +222,6 @@ const NavigationBar = () => {
                     </Menu>
                   </Box>
                 ))}
-
                 <NavButton>School Supplies</NavButton>
                 <NavButton>Stapling & Punching</NavButton>
                 <NavButton>IT Accessories</NavButton>
@@ -262,7 +265,6 @@ const NavigationBar = () => {
               </React.Fragment>
             ))}
 
-            {/* Static Items */}
             {[
               'School Supplies',
               'Stapling & Punching',

@@ -1,48 +1,62 @@
 import React, { useState } from 'react';
-import { 
+import {
   Box,
   Typography,
   TextField,
   Button,
   Paper,
   Container,
-  Grid
+  Grid,
+  useTheme
 } from '@mui/material';
 
 const NewsletterSubscription = () => {
+  const theme = useTheme();
   const [email, setEmail] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Subscribed with email:', email);
-    // Add your subscription logic here
     setEmail('');
   };
 
   return (
-    <Box sx={{ 
-      backgroundColor: '#f5f7fa',
-      py: 8,
-      width: '100%'
-    }}>
+    <Box
+      sx={{
+        backgroundColor: theme.palette.background.default,
+        py: 8,
+        width: '100%',
+      }}
+    >
       <Container maxWidth="md">
-        <Paper elevation={0} sx={{
-          backgroundColor: 'transparent',
-          textAlign: 'center'
-        }}>
-          <Typography variant="h5" component="h2" sx={{ 
-            fontWeight: 'bold',
-            mb: 2,
-            fontSize: '1.5rem'
-          }}>
+        <Paper
+          elevation={0}
+          sx={{
+            backgroundColor: 'transparent',
+            textAlign: 'center',
+          }}
+        >
+          <Typography
+            variant="h5"
+            component="h2"
+            sx={{
+              fontWeight: 'bold',
+              mb: 2,
+              fontSize: '1.5rem',
+              color: 'text.primary',
+            }}
+          >
             Subscribe to our newsletter
           </Typography>
-          
-          <Typography variant="body1" sx={{ 
-            mb: 4,
-            color: 'text.secondary',
-            fontSize: '1rem'
-          }}>
+
+          <Typography
+            variant="body1"
+            sx={{
+              mb: 4,
+              color: 'text.secondary',
+              fontSize: '1rem',
+            }}
+          >
             Get daily news on upcoming offers from many suppliers all over the world
           </Typography>
 
@@ -59,14 +73,17 @@ const NewsletterSubscription = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   sx={{
                     '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      borderRadius: '4px'
-                    }
+                      backgroundColor:
+                        theme.palette.mode === 'dark'
+                          ? theme.palette.background.paper
+                          : '#fff',
+                      borderRadius: '4px',
+                    },
                   }}
                   InputProps={{
                     style: {
-                      height: '48px'
-                    }
+                      height: '48px',
+                    },
                   }}
                 />
               </Grid>
@@ -81,7 +98,7 @@ const NewsletterSubscription = () => {
                     height: '48px',
                     textTransform: 'none',
                     fontWeight: 'medium',
-                    fontSize: '1rem'
+                    fontSize: '1rem',
                   }}
                 >
                   Subscribe
