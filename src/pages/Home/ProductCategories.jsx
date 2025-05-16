@@ -3,14 +3,16 @@ import {
     Box,
     Card,
     Typography,
-    CardMedia
+    CardMedia,
+    IconButton
 } from '@mui/material';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
-
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import 'swiper/css';
 import 'swiper/css/navigation';
+import Tooltip from '@mui/material/Tooltip';
 
 import softChairsImage from '../../assets/images/1.png';
 import sofaChairImage from '../../assets/images/2.png';
@@ -41,9 +43,9 @@ const CategoryCard = ({ category }) => (
             boxShadow: 'none',
             border: '1px solid #f0f0f0',
             borderRadius: 2,
-            p: 3,
+            p: 2,
             position: 'relative',
-            minHeight: 350,
+            minHeight: 320,
             '&:hover': {
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }
@@ -62,7 +64,7 @@ const CategoryCard = ({ category }) => (
                 borderRadius: 1,
                 px: 1.5,
                 py: 0.5,
-                fontSize: 18,
+                fontSize: 12, // Reduced from 14
                 fontWeight: 700,
                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                 zIndex: 1
@@ -71,61 +73,134 @@ const CategoryCard = ({ category }) => (
             {category.cashback}% Cashback
         </Typography>
 
-        {/* Image */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 6, mb: 2 }}>
+        {/* Image - Fixed consistent height */}
+        <Box 
+            sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: 150,
+                mt: 4,
+                mb: 1,
+            }}
+        >
             <CardMedia
                 component="img"
                 image={category.image}
                 alt={category.name}
-                sx={{ width: 160, height: 160, objectFit: 'contain' }}
+                sx={{ 
+                    maxWidth: 130,
+                    maxHeight: 130,
+                    objectFit: 'contain',
+                    margin: 'auto'
+                }}
             />
         </Box>
 
-        {/* Item code */}
-        <Typography variant="body2" color="text.secondary" fontWeight="bold">
+        {/* Item code - Smaller font */}
+        <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            fontWeight="bold"
+            sx={{ fontSize: '0.65rem' }} // Smaller font
+        >
             Item code: XXXXX
         </Typography>
 
-        {/* Item description */}
-        <Typography variant="body1" sx={{ fontWeight: 500, my: 1 }}>
+        {/* Item description - Smaller font */}
+        <Typography 
+            variant="body2"
+            sx={{ 
+                fontWeight: 500, 
+                my: 1,
+                fontSize: '0.75rem', // Smaller font
+                lineHeight: 1.3
+            }}
+        >
             {category.name} - This is a sample product description.
         </Typography>
 
-        {/* Responsive Pricing */}
+        {/* Pricing section - Cleaner layout with smaller fonts */}
         <Box
             sx={{
                 display: 'flex',
-                flexDirection: { xs: 'column', sm: 'row' },
                 justifyContent: 'space-between',
-                gap: 1,
-                mt: 'auto' // pushes pricing to the bottom of card
+                mt: 'auto',
+                mb: 3, // Space for cart icon
+                position: 'relative'
             }}
         >
-            {[
-                { label: '1 - 3 Pc', price: category.price },
-                { label: '4 - 11 Pc', price: category.price * 1.05 },
-                { label: '12Pc +', price: category.price * 0.95 }
-            ].map((tier, idx) => (
-                <Box
-                    key={idx}
+            {/* Simple table-like layout for pricing */}
+            <Box sx={{ width: '100%', display: 'table', tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: '4px' }}>
+                <Box sx={{ display: 'table-row' }}>
+                    {[
+                        { label: '1-3 Pc', price: category.price },
+                        { label: '4-11 Pc', price: category.price * 1.05 },
+                        { label: '12+ Pc', price: category.price * 0.95 }
+                    ].map((tier, idx) => (
+                        <Box
+                            key={idx}
+                            sx={{
+                                display: 'table-cell',
+                                border: '1px solid #e0e0e0',
+                                borderRadius: 1,
+                                p: 0.5,
+                                textAlign: 'center',
+                                verticalAlign: 'middle'
+                            }}
+                        >
+                            <Typography 
+                                sx={{ 
+                                    fontSize: '0.6rem',
+                                    fontWeight: 600,
+                                    lineHeight: 1.2,
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                {tier.label}
+                            </Typography>
+                            <Typography 
+                                sx={{ 
+                                    fontSize: '0.6rem',
+                                    lineHeight: 1.2,
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                {(tier.price / 1000000).toFixed(1)}M
+                            </Typography>
+                        </Box>
+                    ))}
+                </Box>
+            </Box>
+            
+            {/* Cart icon */}
+            <Tooltip title="Add to cart">
+                <IconButton 
+                    size="small"
                     sx={{
-                        flex: 1,
-                        border: '1px solid #ccc',
-                        borderRadius: 1,
-                        p: 1,
-                        textAlign: 'center',
-                        fontSize: 12
+                        position: 'absolute',
+                        right: 0,
+                        bottom: -15,
+                        backgroundColor: '#f0f7ff',
+                        border: '1px solid #e0e0e0',
+                        width: 28,
+                        height: 28,
+                        '&:hover': {
+                            backgroundColor: '#e6f0ff'
+                        }
                     }}
                 >
-                    <Typography variant="body2" fontWeight={600}>{tier.label}</Typography>
-                    <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>{tier.price.toLocaleString()} /= </Typography>
-                </Box>
-            ))}
+                    <ShoppingCartIcon 
+                        sx={{
+                            color: 'blue',
+                            fontSize: '1rem'
+                        }} 
+                    />
+                </IconButton>
+            </Tooltip>
         </Box>
     </Card>
 );
-
-
 
 const ProductCategories = ({ header }) => {
     return (
@@ -152,10 +227,10 @@ const ProductCategories = ({ header }) => {
                         slidesPerView: 2,
                     },
                     900: {
-                        slidesPerView: 4,
+                        slidesPerView: 3,
                     },
                     1200: {
-                        slidesPerView: 6,
+                        slidesPerView: 5, // Display 5 cards as requested
                     }
                 }}
             >
@@ -168,6 +243,5 @@ const ProductCategories = ({ header }) => {
         </Box>
     );
 };
-
 
 export default ProductCategories;

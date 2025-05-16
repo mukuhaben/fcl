@@ -10,6 +10,7 @@ import ProductDetails from './pages/ProductDetails/View/Index';
 import Cart from './pages/Cart/View/Index';
 import RegisterPage from './pages/Registration/View/Index';
 import LoginPage from './pages/Login/View/Index';
+import RegistrationForm from './pages/Registration/View/Index';
 
 function App() {
   // Detect preferred color scheme (light/dark mode)
@@ -94,6 +95,7 @@ function App() {
               <Route path='/register' element={<RegisterPage />} />
               <Route path='/login' element={<LoginPage />} />
               <Route path="/cart" element={<Cart />} />
+              <Route path='/RegistrationForm' element={<RegistrationForm />} />
             </Routes>
           </main>
           <Footer />

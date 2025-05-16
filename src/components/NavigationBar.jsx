@@ -18,6 +18,10 @@ import {
   ListItemButton,
   Collapse,
   useMediaQuery,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton as MuiIconButton,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -29,10 +33,13 @@ import {
   ChevronRight as ChevronRightIcon,
   ExpandLess,
   ExpandMore,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { styled, alpha, useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import FirstCraftLogo from '../assets/images/FirstCraft-logo.png';
+import RegistrationForm from '../pages/Registration/View/Index'; // Update this path to match your file structure
+
 
 // Styled Components
 const Search = styled('div')(({ theme }) => ({
@@ -87,6 +94,19 @@ const NavButton = styled(Button)(({ theme }) => ({
   },
 }));
 
+const RegisterButton = styled(Button)(({ theme }) => ({
+  color: theme.palette.primary.contrastText,
+  backgroundColor: alpha(theme.palette.primary.contrastText, 0.2),
+  textTransform: 'none',
+  padding: '4px 12px',
+  fontSize: '12px',
+  fontWeight: 'bold',
+  marginLeft: theme.spacing(1),
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.primary.contrastText, 0.3),
+  },
+}));
+
 const NavigationBar = () => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -96,6 +116,8 @@ const NavigationBar = () => {
   const [openMenu, setOpenMenu] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerSubmenus, setDrawerSubmenus] = useState({});
+  // Add state for registration form dialog
+  const [registrationOpen, setRegistrationOpen] = useState(false);
 
   const menus = {
     'Office Essentials': ['Paper Products', 'Writing Instruments', 'Binders & Filing'],
@@ -124,6 +146,15 @@ const NavigationBar = () => {
     }));
   };
 
+  // Add handlers for registration dialog
+  const handleOpenRegistration = () => {
+    setRegistrationOpen(true);
+  };
+
+  const handleCloseRegistration = () => {
+    setRegistrationOpen(false);
+  };
+
   return (
     <>
       <AppBar
@@ -144,8 +175,9 @@ const NavigationBar = () => {
                   src={FirstCraftLogo}
                   alt="FirstCraft Logo"
                   sx={{
-                    height: { xs: '30px', sm: '40px' },
+                    height: { xs: '150px', sm: '150px' },
                     marginRight: '8px',
+                    
                   }}
                 />
               </Typography>
@@ -182,6 +214,10 @@ const NavigationBar = () => {
                   <ShoppingCartIcon />
                 </Badge>
               </IconButton>
+              {/* Add Register Button */}
+              <RegisterButton onClick={handleOpenRegistration}>
+                Register
+              </RegisterButton>
               {isMobile && (
                 <IconButton sx={{ color: theme.palette.primary.contrastText }} onClick={toggleDrawer}>
                   <MenuIcon />
@@ -280,9 +316,49 @@ const NavigationBar = () => {
                 </ListItemButton>
               </ListItem>
             ))}
+            
+            {/* Add Register option to mobile drawer */}
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleOpenRegistration}>
+                <ListItemText primary="Register" sx={{ fontWeight: 'bold', color: theme.palette.primary.main }} />
+              </ListItemButton>
+            </ListItem>
           </List>
         </Box>
       </Drawer>
+
+      {/* Registration Form Dialog */}
+      <Dialog 
+        open={registrationOpen} 
+        onClose={handleCloseRegistration}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '8px',
+            maxHeight: '90vh'
+          }
+        }}
+      >
+        <DialogTitle sx={{ m: 0, p: 2, bgcolor: theme.palette.primary.main, color: 'white' }}>
+          Registration
+          <MuiIconButton
+            aria-label="close"
+            onClick={handleCloseRegistration}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'white',
+            }}
+          >
+            <CloseIcon />
+          </MuiIconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0, bgcolor: '#f5f5f5' }}>
+          <RegistrationForm />
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

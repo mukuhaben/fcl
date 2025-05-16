@@ -40,6 +40,7 @@ const CategoryCard = ({ category }) => (
       borderRadius: 2,
       p: 2,
       position: 'relative',
+      minHeight: 320, // Added fixed height for consistent alignment
       '&:hover': {
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
       }
@@ -58,7 +59,7 @@ const CategoryCard = ({ category }) => (
           borderRadius: 1,
           px: 1.5,
           py: 0.5,
-          fontSize: 18,
+          fontSize: 12, // Reduced from 18 to 12
           fontWeight: 700,
           zIndex: 1
         }}
@@ -67,48 +68,100 @@ const CategoryCard = ({ category }) => (
       </Typography>
     )}
 
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 6, mb: 2 }}>
+    {/* Fixed image container with consistent height */}
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: 140, // Fixed height container
+        mt: 4, // Reduced from 6
+        mb: 1, // Reduced from 2
+      }}
+    >
       <img
-        src={category.image}
+        src={category.image || "/placeholder.svg"}
         alt={category.name}
-        style={{ width: 160, height: 160, objectFit: 'contain' }}
+        style={{ 
+          maxWidth: '100%', 
+          maxHeight: 120, 
+          objectFit: 'contain',
+          margin: 'auto' // Center image
+        }}
       />
     </Box>
 
-    <Typography variant="body2" color="text.secondary" fontWeight="bold">
+    {/* Reduced font size */}
+    <Typography 
+      variant="body2" 
+      color="text.secondary" 
+      fontWeight="bold"
+      sx={{ fontSize: '0.65rem' }} // Smaller font
+    >
       Item code: XXXXX
     </Typography>
 
-    <Typography variant="body1" sx={{ fontWeight: 500, my: 1 }}>
+    {/* Reduced font size and added text truncation */}
+    <Typography 
+      variant="body2" // Changed from body1
+      sx={{ 
+        fontWeight: 500, 
+        my: 1,
+        fontSize: '0.75rem', // Smaller font
+        lineHeight: 1.3,
+        // Ensure description doesn't overflow
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }}
+    >
       {category.name} - This is a sample product description.
     </Typography>
 
+    {/* Pricing section with smaller fonts */}
     <Box
       sx={{
         display: 'flex',
-        flexDirection: { xs: 'column', sm: 'row' },
+        flexDirection: 'row', // Always row to fit all prices
         justifyContent: 'space-between',
-        gap: 1
+        gap: 0.5, // Reduced gap
+        mt: 'auto' // Push to bottom of card
       }}
     >
       {[ 
-        { label: '1 - 3 Pc', price: category.price },
-        { label: '4 - 11 Pc', price: category.price * 1.05 },
-        { label: '12Pc +', price: category.price * 0.95 }
+        { label: '1-3 Pc', price: category.price },
+        { label: '4-11 Pc', price: category.price * 1.05 },
+        { label: '12+ Pc', price: category.price * 0.95 }
       ].map((tier, idx) => (
         <Box
           key={idx}
           sx={{
             flex: 1,
-            border: '1px solid #ccc',
+            border: '1px solid #e0e0e0', // Lighter border
             borderRadius: 1,
-            p: 1,
+            p: 0.5, // Reduced padding
             textAlign: 'center',
-            fontSize: 12
+            fontSize: 10 // Reduced from 12
           }}
         >
-          <Typography variant="body2" fontWeight={600}>{tier.label}</Typography>
-          <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>{tier.price.toLocaleString()} /= </Typography>
+          <Typography 
+            variant="body2" 
+            fontWeight={600}
+            sx={{ fontSize: '0.6rem', whiteSpace: 'nowrap' }} // Smaller font
+          >
+            {tier.label}
+          </Typography>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              fontSize: '0.6rem', // Smaller font
+              whiteSpace: 'nowrap' 
+            }}
+          >
+            {tier.price.toFixed(2)}
+          </Typography>
         </Box>
       ))}
     </Box>
@@ -169,7 +222,7 @@ const ProductList = () => {
         <Grid item xs={12} md={10}>
           <Grid container spacing={2}>
             {mockProducts.map(product => (
-              <Grid item xs={12} sm={6} md={4} key={product.id}>
+              <Grid item xs={12} sm={6} md={2.4} key={product.id}> {/* Changed from md={4} to md={2.4} for 5 cards per row */}
                 <CategoryCard category={product} />
               </Grid>
             ))}

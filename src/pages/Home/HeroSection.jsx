@@ -13,6 +13,7 @@ import {
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import banner from '../../assets/images/banner.png';
+import { LocalAtm, Groups } from '@mui/icons-material';
 
 // Styled components
 const CategoryItem = styled(ListItem)(({ theme, active }) => ({
@@ -24,6 +25,21 @@ const CategoryItem = styled(ListItem)(({ theme, active }) => ({
   padding: '12px 16px',
   borderBottom: '1px solid #f0f0f0',
   backgroundColor: active ? '#f0f7ff' : 'transparent',
+}));
+
+// Banner overlay for text
+const BannerOverlay = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  padding: theme.spacing(3),
+  backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  zIndex: 1,
 }));
 
 const HeroSection = () => {
@@ -58,7 +74,7 @@ const HeroSection = () => {
           {/* Categories */}
         
 
-          {/* Banner */}
+          {/* Cashback Banner */}
           <Box
             sx={{
               width: { xs: '100%', md: '50%' },
@@ -67,18 +83,55 @@ const HeroSection = () => {
               alignItems: 'center',
               borderRight: { md: '1px solid #f0f0f0' },
               borderBottom: { xs: '1px solid #f0f0f0', md: 'none' },
+              position: 'relative',
             }}
           >
             <img
-              src={banner}
-              alt="Banner"
+              src={banner || "/placeholder.svg"}
+              alt="Cashback Offer"
               style={{
                 width: '100%',
                 height: 'auto',
                 objectFit: 'contain',
               }}
             />
+            <BannerOverlay>
+              <Typography
+                variant={isMobile ? 'h6' : 'h5'}
+                component="h2"
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'white',
+                  mb: 1,
+                }}
+              >
+                Earn 5% Cashback
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'white',
+                  mb: 2,
+                }}
+              >
+                On all purchases. Shop now and save!
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                startIcon={<LocalAtm />}
+                onClick={() => navigate('/products')}
+                sx={{
+                  maxWidth: '150px',
+                }}
+              >
+                Shop & Earn
+              </Button>
+            </BannerOverlay>
           </Box>
+
+          {/* Bulk Pricing Banner */}
           <Box
             sx={{
               width: { xs: '100%', md: '50%' },
@@ -87,17 +140,52 @@ const HeroSection = () => {
               alignItems: 'center',
               borderRight: { md: '1px solid #f0f0f0' },
               borderBottom: { xs: '1px solid #f0f0f0', md: 'none' },
+              position: 'relative',
             }}
           >
             <img
-              src={banner}
-              alt="Banner"
+              src={banner || "/placeholder.svg"}
+              alt="Bulk Pricing"
               style={{
                 width: '100%',
                 height: 'auto',
                 objectFit: 'contain',
               }}
             />
+            <BannerOverlay>
+              <Typography
+                variant={isMobile ? 'h6' : 'h5'}
+                component="h2"
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'white',
+                  mb: 1,
+                }}
+              >
+                Save 30% on Bulk Orders
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'white',
+                  mb: 2,
+                }}
+              >
+                Special discounts on orders of 10+ items.
+              </Typography>
+              <Button
+                variant="contained"
+                color="error"
+                size="small"
+                startIcon={<Groups />}
+                onClick={() => navigate('/bulk-pricing')}
+                sx={{
+                  maxWidth: '150px',
+                }}
+              >
+                View Bulk Deals
+              </Button>
+            </BannerOverlay>
           </Box>
 
           {/* User Actions */}

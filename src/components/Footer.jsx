@@ -56,7 +56,7 @@ export default function Footer() {
         {/* Logo and company info */}
         <Grid item xs={12} sm={6} md={3}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, cursor: 'pointer' }} onClick={() => navigate('/')}>
-            <Box component="img" src={FirstCraftLogo} alt="First Craft logo" sx={{ height: 50 }} />
+            <Box component="img" src={FirstCraftLogo} alt="First Craft logo" sx={{ height: 150 }} />
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Best information about the company goes here but now lorem ipsum is
