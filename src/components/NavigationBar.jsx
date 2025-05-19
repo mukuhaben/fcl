@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+"use client"
+
+import React, { useState, useRef } from "react"
 import {
   AppBar,
   Toolbar,
@@ -9,8 +11,6 @@ import {
   Badge,
   Container,
   Button,
-  Menu,
-  MenuItem,
   Drawer,
   List,
   ListItem,
@@ -22,7 +22,15 @@ import {
   DialogContent,
   DialogTitle,
   IconButton as MuiIconButton,
-} from '@mui/material';
+  Tooltip,
+  Paper,
+  Popper,
+  Fade,
+  TextField,
+  InputAdornment,
+  Divider,
+  Avatar,
+} from "@mui/material"
 import {
   Menu as MenuIcon,
   Search as SearchIcon,
@@ -32,128 +40,217 @@ import {
   ExpandMore as ChevronDownIcon,
   ChevronRight as ChevronRightIcon,
   ExpandLess,
-  ExpandMore,
   Close as CloseIcon,
-} from '@mui/icons-material';
-import { styled, alpha, useTheme } from '@mui/material/styles';
-import { useNavigate } from 'react-router-dom';
-import FirstCraftLogo from '../assets/images/FirstCraft-logo.png';
-import RegistrationForm from '../pages/Registration/View/Index'; // Update this path to match your file structure
-
+  Wallet as WalletIcon,
+  Home as HomeIcon,
+  Phone as PhoneIcon,
+  Mail as MailIcon,
+} from "@mui/icons-material"
+import { styled, alpha, useTheme } from "@mui/material/styles"
+import { useNavigate } from "react-router-dom"
+import FirstCraftLogo from "../assets/images/FirstCraft-logo.png"
+import RegistrationForm from "../pages/Registration/View/Index" // Update this path to match your file structure
 
 // Styled Components
-const Search = styled('div')(({ theme }) => ({
-  position: 'relative',
+const Search = styled("div")(({ theme }) => ({
+  position: "relative",
   borderRadius: theme.shape.borderRadius,
   backgroundColor: alpha(theme.palette.common.white, 0.15),
-  '&:hover': {
+  "&:hover": {
     backgroundColor: alpha(theme.palette.common.white, 0.25),
   },
   marginRight: theme.spacing(2),
   marginLeft: 0,
-  width: '100%',
-  [theme.breakpoints.up('sm')]: {
-    marginLeft: theme.spacing(3),
-    width: 'auto',
+  width: "auto", // Original width setting
+  [theme.breakpoints.down("sm")]: {
+    marginRight: theme.spacing(1), // Less margin on mobile
   },
-}));
+  [theme.breakpoints.up("sm")]: {
+    marginLeft: theme.spacing(3),
+    width: "auto",
+  },
+}))
 
-const SearchIconWrapper = styled('div')(({ theme }) => ({
+const SearchIconWrapper = styled("div")(({ theme }) => ({
   padding: theme.spacing(0, 2),
-  height: '100%',
-  position: 'absolute',
-  pointerEvents: 'none',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
+  height: "100%",
+  position: "absolute",
+  pointerEvents: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
   color: theme.palette.grey[500],
-}));
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(0, 1), // Less padding on mobile
+  },
+}))
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: 'inherit',
-  width: '100%',
-  '& .MuiInputBase-input': {
+  color: "inherit",
+  "& .MuiInputBase-input": {
     padding: theme.spacing(1, 1, 1, 0),
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create('width'),
-    width: '100%',
-    [theme.breakpoints.up('md')]: {
-      width: '20ch',
+    transition: theme.transitions.create("width"),
+    width: "20ch", // Original fixed width
+    [theme.breakpoints.down("sm")]: {
+      width: "15ch", // Smaller width on mobile
+      paddingLeft: `calc(1em + ${theme.spacing(3)})`, // Less padding on mobile
+      fontSize: "0.875rem", // Smaller font on mobile
+    },
+    [theme.breakpoints.up("md")]: {
+      width: "20ch",
     },
   },
-}));
+}))
 
 const NavButton = styled(Button)(({ theme }) => ({
   color: theme.palette.primary.contrastText,
-  textTransform: 'none',
-  padding: '4px 8px',
-  fontSize: '12px',
-  minWidth: 'unset',
-  '&:hover': {
+  textTransform: "none",
+  padding: "4px 8px",
+  fontSize: "12px",
+  minWidth: "unset",
+  whiteSpace: "nowrap",
+  "&:hover": {
     backgroundColor: alpha(theme.palette.primary.contrastText, 0.15),
   },
-}));
+}))
 
 const RegisterButton = styled(Button)(({ theme }) => ({
   color: theme.palette.primary.contrastText,
   backgroundColor: alpha(theme.palette.primary.contrastText, 0.2),
-  textTransform: 'none',
-  padding: '4px 12px',
-  fontSize: '12px',
-  fontWeight: 'bold',
+  textTransform: "none",
+  padding: "4px 12px",
+  fontSize: "12px",
+  fontWeight: "bold",
   marginLeft: theme.spacing(1),
-  '&:hover': {
+  whiteSpace: "nowrap",
+  "&:hover": {
     backgroundColor: alpha(theme.palette.primary.contrastText, 0.3),
   },
-}));
+  [theme.breakpoints.down("sm")]: {
+    marginLeft: theme.spacing(0.5), // Less margin on mobile
+    padding: "4px 8px", // Less padding on mobile
+  },
+}))
+
+const WalletButton = styled(Button)(({ theme }) => ({
+  color: theme.palette.primary.contrastText,
+  backgroundColor: alpha(theme.palette.primary.contrastText, 0.2),
+  textTransform: "none",
+  padding: "4px 12px",
+  fontSize: "12px",
+  fontWeight: "bold",
+  marginLeft: theme.spacing(1),
+  whiteSpace: "nowrap",
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.primary.contrastText, 0.3),
+  },
+  [theme.breakpoints.down("sm")]: {
+    marginLeft: theme.spacing(0.5), // Less margin on mobile
+    padding: "4px 8px", // Less padding on mobile
+  },
+}))
+
+// Styled dropdown content
+const DropdownContent = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(1),
+  backgroundColor: theme.palette.background.paper,
+  boxShadow: theme.shadows[4], // Stronger shadow
+  borderRadius: theme.shape.borderRadius,
+  minWidth: 180,
+  zIndex: 1500, // Higher z-index to ensure it appears above other content
+}))
+
+// Styled dropdown item
+const DropdownItem = styled("div")(({ theme }) => ({
+  padding: theme.spacing(1, 2),
+  cursor: "pointer",
+  "&:hover": {
+    backgroundColor: theme.palette.action.hover,
+  },
+}))
 
 const NavigationBar = () => {
-  const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"))
 
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [openMenu, setOpenMenu] = useState('');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerSubmenus, setDrawerSubmenus] = useState({});
-  // Add state for registration form dialog
-  const [registrationOpen, setRegistrationOpen] = useState(false);
+  // Refs for menu buttons
+  const menuRefs = useRef({})
+
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerSubmenus, setDrawerSubmenus] = useState({})
+  const [registrationOpen, setRegistrationOpen] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+
+  // State for tooltips
+  const [activeTooltip, setActiveTooltip] = useState("")
+
+  // State for dropdowns
+  const [activeDropdown, setActiveDropdown] = useState("")
 
   const menus = {
-    'Office Essentials': ['Paper Products', 'Writing Instruments', 'Binders & Filing'],
-    'Toners & Inks': ['HP Toners', 'Canon Inks', 'Brother Cartridges'],
-    'Office Machines': ['Printers', 'Shredders', 'Laminators'],
-  };
+    "Office Essentials": ["Paper Products", "Writing Instruments", "Binders & Filing"],
+    "Toners & Inks": ["HP Toners", "Canon Inks", "Brother Cartridges"],
+    "Office Machines": ["Printers", "Shredders", "Laminators"],
+  }
 
-  const handleMenuOpen = (event, menuName) => {
-    setAnchorEl(event.currentTarget);
-    setOpenMenu(menuName);
-  };
+  // Handle dropdown open
+  const handleDropdownOpen = (menuName) => {
+    setActiveDropdown(menuName)
+  }
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setOpenMenu('');
-  };
+  // Handle dropdown close
+  const handleDropdownClose = () => {
+    setActiveDropdown("")
+  }
+
+  // Handle tooltip open
+  const handleTooltipOpen = (tooltipName) => {
+    setActiveTooltip(tooltipName)
+  }
+
+  // Handle tooltip close
+  const handleTooltipClose = () => {
+    setActiveTooltip("")
+  }
 
   const toggleDrawer = () => {
-    setDrawerOpen((prev) => !prev);
-  };
+    setDrawerOpen((prev) => !prev)
+  }
 
   const toggleSubmenu = (key) => {
     setDrawerSubmenus((prev) => ({
       ...prev,
       [key]: !prev[key],
-    }));
-  };
+    }))
+  }
 
-  // Add handlers for registration dialog
   const handleOpenRegistration = () => {
-    setRegistrationOpen(true);
-  };
+    setRegistrationOpen(true)
+  }
 
   const handleCloseRegistration = () => {
-    setRegistrationOpen(false);
-  };
+    setRegistrationOpen(false)
+  }
+
+  // Toggle mobile search
+  const toggleMobileSearch = () => {
+    setMobileSearchOpen((prev) => !prev)
+  }
+
+  // Handle dropdown item click
+  const handleDropdownItemClick = (item) => {
+    console.log(`Clicked on ${item}`)
+    handleDropdownClose()
+    // In a real app, you might want to navigate here
+  }
+
+  // Initialize refs for menu items
+  const setMenuRef = (menuName, element) => {
+    menuRefs.current[menuName] = element
+  }
 
   return (
     <>
@@ -163,101 +260,315 @@ const NavigationBar = () => {
           boxShadow: 0,
           backgroundColor: theme.palette.background.paper,
           color: theme.palette.text.primary,
+          overflowX: "hidden", // Prevent horizontal scrolling
+          zIndex: 1200, // Set a base z-index for the AppBar
         }}
       >
-        <Container maxWidth="xl">
-          <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
-            {/* Logo */}
-            <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => navigate('/')}>
-              <Typography variant="h6" noWrap sx={{ fontWeight: 700, display: 'flex', alignItems: 'center' }}>
-                <Box
-                  component="img"
-                  src={FirstCraftLogo}
-                  alt="FirstCraft Logo"
-                  sx={{
-                    height: { xs: '150px', sm: '150px' },
-                    marginRight: '8px',
-                    
-                  }}
-                />
+        {/* Mobile Top Bar - Contact Info */}
+        {isMobile && (
+          <Box
+            sx={{
+              bgcolor: "#f5f5f5",
+              py: 0.5,
+              px: 2,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderBottom: "1px solid #e0e0e0",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <PhoneIcon fontSize="small" color="primary" />
+              <Typography variant="caption" color="text.secondary">
+                +254 712 345 678
               </Typography>
             </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <MailIcon fontSize="small" color="primary" />
+              <Typography variant="caption" color="text.secondary">
+                info@firstcraft.com
+              </Typography>
+            </Box>
+          </Box>
+        )}
 
-            {/* Right Side */}
+        <Container
+          maxWidth="xl"
+          sx={{
+            px: { xs: 1, sm: 2 }, // Reduce padding on small screens
+            overflowX: "hidden", // Prevent horizontal scrolling
+          }}
+        >
+          <Toolbar
+            disableGutters
+            sx={{
+              justifyContent: "space-between",
+              flexDirection: { xs: "row", sm: "row" }, // Row on all screens for better layout
+              alignItems: "center",
+              flexWrap: "wrap", // Allow wrapping on very small screens
+              minHeight: { xs: "56px" }, // Standard height on mobile
+              py: { xs: 1, sm: 1 }, // Consistent padding
+              gap: { xs: 1, sm: 0 }, // Add gap between elements on mobile
+            }}
+          >
+            {/* Logo and Mobile Menu Button */}
             <Box
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                backgroundColor: theme.palette.primary.main,
-                color: theme.palette.primary.contrastText,
-                px: 1,
-                borderRadius: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between", // Space between logo and menu button
+                width: { xs: "100%", sm: "auto" }, // Full width on mobile
+                mb: { xs: 0, sm: 0 }, // No margin bottom
               }}
             >
+              {/* Logo */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  cursor: "pointer",
+                }}
+                onClick={() => navigate("/")}
+              >
+                <Typography variant="h6" noWrap sx={{ fontWeight: 700, display: "flex", alignItems: "center" }}>
+                  <Box
+                    component="img"
+                    src={FirstCraftLogo}
+                    alt="FirstCraft Logo"
+                    sx={{
+                      height: { xs: "50px", sm: "70px" }, // Smaller on mobile
+                      maxWidth: "100%", // Ensure it doesn't overflow
+                      objectFit: "contain", // Maintain aspect ratio
+                    }}
+                  />
+                </Typography>
+              </Box>
+
+              {/* Mobile Menu Button */}
+              {isMobile && (
+                <IconButton sx={{ color: theme.palette.primary.main }} onClick={toggleDrawer} aria-label="menu">
+                  <MenuIcon />
+                </IconButton>
+              )}
+            </Box>
+
+            {/* Mobile Search Bar - Expandable */}
+            {isMobile && mobileSearchOpen && (
+              <Box
+                sx={{
+                  width: "100%",
+                  py: 1,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Search products..."
+                  variant="outlined"
+                  autoFocus
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={toggleMobileSearch}>
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "4px",
+                    },
+                  }}
+                />
+              </Box>
+            )}
+
+            {/* Right Side - Desktop and Mobile */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row", // Always row for better layout
+                alignItems: "center",
+                justifyContent: "flex-end", // Align to the right
+                gap: { xs: 0.5, sm: 0.5 }, // Smaller gap on mobile
+                backgroundColor: theme.palette.primary.main,
+                color: theme.palette.primary.contrastText,
+                px: { xs: 1, sm: 1 }, // Less padding on mobile
+                py: { xs: 1, sm: 1 }, // Consistent padding
+                borderRadius: 1,
+                width: isMobile ? "100%" : "auto", // Full width on mobile
+                mt: isMobile && mobileSearchOpen ? 1 : 0, // Add margin top if search is open
+              }}
+            >
+              {/* Search bar - desktop only */}
               {!isMobile && (
                 <Search>
                   <SearchIconWrapper>
                     <SearchIcon />
                   </SearchIconWrapper>
-                  <StyledInputBase placeholder="Search..." inputProps={{ 'aria-label': 'search' }} />
+                  <StyledInputBase placeholder="Search..." inputProps={{ "aria-label": "search" }} />
                 </Search>
               )}
-              <IconButton sx={{ color: theme.palette.primary.contrastText }} onClick={() => navigate('/wishlist')}>
-                <FavoriteIcon />
-              </IconButton>
-              <IconButton sx={{ color: theme.palette.primary.contrastText }} onClick={() => navigate('/account')}>
-                <PersonIcon />
-              </IconButton>
-              <IconButton sx={{ color: theme.palette.primary.contrastText }} onClick={() => navigate('/cart')}>
-                <Badge badgeContent={0} color="error">
-                  <ShoppingCartIcon />
-                </Badge>
-              </IconButton>
-              {/* Add Register Button */}
-              <RegisterButton onClick={handleOpenRegistration}>
-                Register
-              </RegisterButton>
-              {isMobile && (
-                <IconButton sx={{ color: theme.palette.primary.contrastText }} onClick={toggleDrawer}>
-                  <MenuIcon />
+
+              {/* Mobile Search Toggle Button */}
+              {isMobile && !mobileSearchOpen && (
+                <IconButton
+                  size="small"
+                  sx={{ color: theme.palette.primary.contrastText }}
+                  onClick={toggleMobileSearch}
+                >
+                  <SearchIcon fontSize="small" />
                 </IconButton>
               )}
+
+              {/* Action buttons row */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                }}
+              >
+                {/* Wishlist Icon with Tooltip */}
+                <Tooltip title="My Wishlist" arrow>
+                  <IconButton
+                    size={isMobile ? "small" : "medium"}
+                    sx={{ color: theme.palette.primary.contrastText }}
+                    onClick={() => navigate("/wishlist")}
+                    onMouseEnter={() => handleTooltipOpen("wishlist")}
+                    onMouseLeave={handleTooltipClose}
+                  >
+                    <FavoriteIcon fontSize={isMobile ? "small" : "medium"} />
+                  </IconButton>
+                </Tooltip>
+
+                {/* Profile Icon with Tooltip */}
+                <Tooltip title="My Profile" arrow>
+                  <IconButton
+                    size={isMobile ? "small" : "medium"}
+                    sx={{ color: theme.palette.primary.contrastText }}
+                    onClick={() => navigate("/account")}
+                    onMouseEnter={() => handleTooltipOpen("profile")}
+                    onMouseLeave={handleTooltipClose}
+                  >
+                    <PersonIcon fontSize={isMobile ? "small" : "medium"} />
+                  </IconButton>
+                </Tooltip>
+
+                {/* Cart Icon with Tooltip */}
+                <Tooltip title="My Cart" arrow>
+                  <IconButton
+                    size={isMobile ? "small" : "medium"}
+                    sx={{ color: theme.palette.primary.contrastText }}
+                    onClick={() => navigate("/cart")}
+                    onMouseEnter={() => handleTooltipOpen("cart")}
+                    onMouseLeave={handleTooltipClose}
+                  >
+                    <Badge badgeContent={0} color="error">
+                      <ShoppingCartIcon fontSize={isMobile ? "small" : "medium"} />
+                    </Badge>
+                  </IconButton>
+                </Tooltip>
+
+                {/* E-Wallet Button - Desktop only */}
+                {!isTablet && !isMobile && (
+                  <WalletButton startIcon={<WalletIcon />} onClick={() => navigate("/wallet")}>
+                    E-Wallet
+                  </WalletButton>
+                )}
+
+                {/* Register Button - Desktop only */}
+                {!isMobile && <RegisterButton onClick={handleOpenRegistration}>Register</RegisterButton>}
+              </Box>
             </Box>
           </Toolbar>
         </Container>
 
-        {/* Bottom Toolbar */}
+        {/* Bottom Toolbar - Desktop only */}
         {!isMobile && (
-          <Box sx={{ bgcolor: theme.palette.primary.main, width: '100%', color: theme.palette.primary.contrastText }}>
+          <Box
+            sx={{
+              bgcolor: theme.palette.primary.main,
+              width: "100%",
+              color: theme.palette.primary.contrastText,
+              overflowX: "auto", // Allow horizontal scrolling only in the menu bar
+              "&::-webkit-scrollbar": { height: "4px" },
+              "&::-webkit-scrollbar-thumb": { backgroundColor: "rgba(255,255,255,0.2)", borderRadius: "4px" },
+              position: "relative", // Important for proper stacking context
+              zIndex: 1, // Lower than dropdown z-index
+            }}
+          >
             <Container maxWidth="xl">
-              <Toolbar disableGutters sx={{ minHeight: '40px', overflowX: 'auto' }}>
+              <Toolbar
+                disableGutters
+                sx={{
+                  minHeight: "40px",
+                  overflowX: "auto",
+                  display: "flex",
+                  flexWrap: "nowrap", // Prevent wrapping
+                }}
+              >
+                {/* Home Button in the navigation bar */}
+                <NavButton startIcon={<HomeIcon fontSize="small" />} onClick={() => navigate("/")}>
+                  Home
+                </NavButton>
+
                 <NavButton>Special Offer</NavButton>
+
+                {/* Menu items with hover effect */}
                 {Object.keys(menus).map((menuName) => (
-                  <Box key={menuName} onMouseLeave={handleMenuClose}>
-                    <NavButton
-                      onMouseEnter={(e) => handleMenuOpen(e, menuName)}
-                      endIcon={<ChevronDownIcon fontSize="small" />}
+                  <Box
+                    key={menuName}
+                    ref={(el) => setMenuRef(menuName, el)}
+                    sx={{ position: "relative" }}
+                    onMouseEnter={() => handleDropdownOpen(menuName)}
+                    onMouseLeave={handleDropdownClose}
+                  >
+                    <NavButton endIcon={<ChevronDownIcon fontSize="small" />}>{menuName}</NavButton>
+
+                    {/* Dropdown content */}
+                    <Popper
+                      open={activeDropdown === menuName}
+                      anchorEl={menuRefs.current[menuName]}
+                      placement="bottom-start"
+                      transition
+                      disablePortal={false}
+                      style={{ zIndex: 1400 }}
+                      modifiers={[
+                        {
+                          name: "offset",
+                          options: {
+                            offset: [0, 8],
+                          },
+                        },
+                      ]}
                     >
-                      {menuName}
-                    </NavButton>
-                    <Menu
-                      anchorEl={anchorEl}
-                      open={openMenu === menuName}
-                      onClose={handleMenuClose}
-                      MenuListProps={{
-                        onMouseEnter: () => {},
-                        onMouseLeave: handleMenuClose,
-                      }}
-                    >
-                      {menus[menuName].map((item, index) => (
-                        <MenuItem key={index} onClick={handleMenuClose}>
-                          {item}
-                        </MenuItem>
-                      ))}
-                    </Menu>
+                      {({ TransitionProps }) => (
+                        <Fade {...TransitionProps} timeout={200}>
+                          <DropdownContent
+                            onMouseEnter={() => handleDropdownOpen(menuName)}
+                            onMouseLeave={handleDropdownClose}
+                          >
+                            {menus[menuName].map((item, index) => (
+                              <DropdownItem key={index} onClick={() => handleDropdownItemClick(item)}>
+                                {item}
+                              </DropdownItem>
+                            ))}
+                          </DropdownContent>
+                        </Fade>
+                      )}
+                    </Popper>
                   </Box>
                 ))}
+
                 <NavButton>School Supplies</NavButton>
                 <NavButton>Stapling & Punching</NavButton>
                 <NavButton>IT Accessories</NavButton>
@@ -265,16 +576,167 @@ const NavigationBar = () => {
                 <NavButton>More</NavButton>
                 <NavButton>ALL Brands</NavButton>
                 <NavButton>Contact Us</NavButton>
+
+                {/* E-Wallet Button for tablet view */}
+                {isTablet && !isMobile && (
+                  <WalletButton startIcon={<WalletIcon />} onClick={() => navigate("/wallet")}>
+                    E-Wallet
+                  </WalletButton>
+                )}
               </Toolbar>
             </Container>
           </Box>
         )}
       </AppBar>
 
-      {/* Mobile Drawer */}
-      <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer}>
-        <Box sx={{ width: 260 }} role="presentation">
+      {/* Mobile Drawer - Enhanced for better mobile experience */}
+      <Drawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={toggleDrawer}
+        sx={{
+          "& .MuiDrawer-paper": {
+            width: { xs: "85%", sm: 280 },
+            maxWidth: "100%",
+          },
+        }}
+      >
+        <Box sx={{ width: "100%" }} role="presentation">
+          {/* User Profile Section */}
+          <Box
+            sx={{
+              p: 2,
+              bgcolor: theme.palette.primary.main,
+              color: "white",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 64,
+                height: 64,
+                mb: 1,
+                bgcolor: theme.palette.primary.light,
+              }}
+            >
+              <PersonIcon fontSize="large" />
+            </Avatar>
+            <Typography variant="subtitle1" fontWeight="bold">
+              Welcome
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                sx={{
+                  color: "white",
+                  borderColor: "white",
+                  "&:hover": { borderColor: "white", bgcolor: "rgba(255,255,255,0.1)" },
+                }}
+                onClick={() => {
+                  toggleDrawer()
+                  navigate("/login")
+                }}
+              >
+                Sign In
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                sx={{
+                  bgcolor: "white",
+                  color: theme.palette.primary.main,
+                  "&:hover": { bgcolor: "rgba(255,255,255,0.9)" },
+                }}
+                onClick={() => {
+                  toggleDrawer()
+                  handleOpenRegistration()
+                }}
+              >
+                Register
+              </Button>
+            </Box>
+          </Box>
+
+          {/* Search in drawer */}
+          <Box sx={{ p: 2 }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Search..."
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+
+          {/* Quick Actions */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-around",
+              p: 1,
+              borderBottom: "1px solid #e0e0e0",
+              borderTop: "1px solid #e0e0e0",
+            }}
+          >
+            <IconButton
+              color="primary"
+              onClick={() => {
+                toggleDrawer()
+                navigate("/cart")
+              }}
+            >
+              <Badge badgeContent={0} color="error">
+                <ShoppingCartIcon />
+              </Badge>
+            </IconButton>
+            <IconButton
+              color="primary"
+              onClick={() => {
+                toggleDrawer()
+                navigate("/wishlist")
+              }}
+            >
+              <FavoriteIcon />
+            </IconButton>
+            <IconButton
+              color="primary"
+              onClick={() => {
+                toggleDrawer()
+                navigate("/wallet")
+              }}
+            >
+              <WalletIcon />
+            </IconButton>
+          </Box>
+
           <List>
+            {/* Home option in mobile drawer */}
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={() => {
+                  toggleDrawer()
+                  navigate("/")
+                }}
+              >
+                <ListItemText
+                  primary={
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <HomeIcon fontSize="small" color="primary" />
+                      <span>Home</span>
+                    </Box>
+                  }
+                />
+              </ListItemButton>
+            </ListItem>
+
             <ListItem disablePadding>
               <ListItemButton>
                 <ListItemText primary="Special Offer" />
@@ -302,13 +764,13 @@ const NavigationBar = () => {
             ))}
 
             {[
-              'School Supplies',
-              'Stapling & Punching',
-              'IT Accessories',
-              'Office Furniture',
-              'More',
-              'ALL Brands',
-              'Contact Us',
+              "School Supplies",
+              "Stapling & Punching",
+              "IT Accessories",
+              "Office Furniture",
+              "More",
+              "ALL Brands",
+              "Contact Us",
             ].map((item, index) => (
               <ListItem disablePadding key={index}>
                 <ListItemButton>
@@ -316,51 +778,63 @@ const NavigationBar = () => {
                 </ListItemButton>
               </ListItem>
             ))}
-            
-            {/* Add Register option to mobile drawer */}
-            <ListItem disablePadding>
-              <ListItemButton onClick={handleOpenRegistration}>
-                <ListItemText primary="Register" sx={{ fontWeight: 'bold', color: theme.palette.primary.main }} />
-              </ListItemButton>
-            </ListItem>
           </List>
+
+          <Divider />
+
+          {/* Contact Information */}
+          <Box sx={{ p: 2 }}>
+            <Typography variant="subtitle2" color="primary" gutterBottom>
+              Contact Us
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <PhoneIcon fontSize="small" color="primary" />
+              <Typography variant="body2">+254 712 345 678</Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <MailIcon fontSize="small" color="primary" />
+              <Typography variant="body2">info@firstcraft.com</Typography>
+            </Box>
+          </Box>
         </Box>
       </Drawer>
 
       {/* Registration Form Dialog */}
-      <Dialog 
-        open={registrationOpen} 
+      <Dialog
+        open={registrationOpen}
         onClose={handleCloseRegistration}
         maxWidth="lg"
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: '8px',
-            maxHeight: '90vh'
-          }
+            borderRadius: "8px",
+            maxHeight: "90vh",
+            width: { xs: "95%", sm: "90%", md: "80%" }, // Responsive width
+            margin: { xs: "10px", sm: "auto" }, // Proper margins on mobile
+          },
         }}
       >
-        <DialogTitle sx={{ m: 0, p: 2, bgcolor: theme.palette.primary.main, color: 'white' }}>
+        <DialogTitle sx={{ m: 0, p: 2, bgcolor: theme.palette.primary.main, color: "white" }}>
           Registration
           <MuiIconButton
             aria-label="close"
             onClick={handleCloseRegistration}
             sx={{
-              position: 'absolute',
+              position: "absolute",
               right: 8,
               top: 8,
-              color: 'white',
+              color: "white",
             }}
           >
             <CloseIcon />
           </MuiIconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{ p: 0, bgcolor: '#f5f5f5' }}>
+        <DialogContent dividers sx={{ p: 0, bgcolor: "#f5f5f5", overflowX: "hidden" }}>
           <RegistrationForm />
         </DialogContent>
       </Dialog>
     </>
-  );
-};
+  )
+}
 
-export default NavigationBar;
+export default NavigationBar

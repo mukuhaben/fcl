@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Box,
   Typography,
@@ -8,7 +8,6 @@ import {
   Grid,
   Button,
   Divider,
-  TextField,
   IconButton,
   Card,
   CardMedia,
@@ -21,20 +20,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  // RESPONSIVE CHANGE 1: Add useMediaQuery and useTheme for responsive detection
   useMediaQuery,
   useTheme,
+  Chip,
 } from "@mui/material"
-import {
-  ShoppingCart,
-  KeyboardArrowDown,
-  ArrowBack,
-  Lock,
-  Headset,
-  LocalShipping,
-  KeyboardArrowUp,
-  DeleteOutline,
-} from "@mui/icons-material"
+import { ShoppingCart, KeyboardArrowDown, ArrowBack, KeyboardArrowUp, DeleteOutline } from "@mui/icons-material"
 import softChairsImage from "../../../assets/images/1.png"
 import sofaChairImage from "../../../assets/images/2.png"
 import kitchenDishesImage from "../../../assets/images/11.png"
@@ -55,9 +45,10 @@ export default function Cart() {
       color: "blue",
       material: "Plastic",
       seller: "Artist Market",
-      price: 78.99,
-      cashback: 3.95, // 5% cashback
+      price: 79, // Removed decimals
+      cashbackPercent: 5, // 5% cashback
       image: softChairsImage,
+      itemCode: "SC001",
     },
     {
       id: "item2",
@@ -66,9 +57,10 @@ export default function Cart() {
       color: "blue",
       material: "Plastic",
       seller: "Best factory LLC",
-      price: 39.0,
-      cashback: 1.95, // 5% cashback
+      price: 39, // Removed decimals
+      cashbackPercent: 5, // 5% cashback
       image: sofaChairImage,
+      itemCode: "TS001",
     },
     {
       id: "item3",
@@ -77,56 +69,77 @@ export default function Cart() {
       color: "blue",
       material: "Plastic",
       seller: "Artist Market",
-      price: 170.5,
-      cashback: 8.53, // 5% cashback
+      price: 171, // Removed decimals
+      cashbackPercent: 5, // 5% cashback
       image: kitchenDishesImage,
+      itemCode: "TS002",
     },
   ]
 
   // State for cart items
-  const [cartItems, setCartItems] = useState(initialCartItems)
+  const [cartItems, setCartItems] = useState([])
+
+  // Load cart items from localStorage on component mount
+  useEffect(() => {
+    const storedCartItems = JSON.parse(localStorage.getItem("cartItems")) || []
+    if (storedCartItems.length > 0) {
+      setCartItems(storedCartItems)
+    } else {
+      // If no items in localStorage, use the initial items
+      setCartItems(initialCartItems)
+    }
+  }, [])
 
   // State for saved items
   const [savedItems, setSavedItems] = useState([
     {
       id: "saved1",
       name: "GoPro HERO6 4K Action Camera - Black",
-      price: 99.5,
-      cashback: 4.98,
+      price: 100, // Removed decimals
+      cashbackPercent: 5, // 5% cashback
       image: smartWatchesImage,
+      itemCode: "GP001",
     },
     {
       id: "saved2",
       name: "GoPro HERO6 4K Action Camera - Black",
-      price: 99.5,
-      cashback: 4.98,
+      price: 100, // Removed decimals
+      cashbackPercent: 5, // 5% cashback
       image: kitchenMixerImage,
+      itemCode: "GP002",
     },
     {
       id: "saved3",
       name: "GoPro HERO6 4K Action Camera - Black",
-      price: 99.5,
-      cashback: 4.98,
+       // Removed decimals
+      cashbackPercent: 5, // 5% cashback
       image: blendersImage,
+      itemCode: "GP003",
     },
     {
       id: "saved4",
       name: "GoPro HERO6 4K Action Camera - Black",
-      price: 99.5,
-      cashback: 4.98,
+      price: 1000,// Removed decimals
+      cashbackPercent: 5, // 5% cashback
       image: homeApplianceImage,
+      itemCode: "GP004",
     },
-  ])
+  ]) 
 
   // State for quantity selectors
-  const [quantities, setQuantities] = useState({
-    item1: 1,
-    item2: 1,
-    item3: 1,
-  })
+  const [quantities, setQuantities] = useState({})
 
-  // State for coupon input
-  const [coupon, setCoupon] = useState("")
+  // Initialize quantities for cart items
+  useEffect(() => {
+    const initialQuantities = {}
+    cartItems.forEach((item) => {
+      initialQuantities[item.id] = 1
+    })
+    setQuantities(initialQuantities)
+  }, [cartItems])
+
+  // State for coupon input - commented out to prevent console errors
+  // const [coupon, setCoupon] = useState("")
 
   // RESPONSIVE CHANGE 2: Add theme and isMobile detection
   const theme = useTheme()
@@ -156,7 +169,11 @@ export default function Cart() {
 
   // Handler for removing an item from the cart
   const removeItem = (itemId) => {
-    setCartItems(cartItems.filter((item) => item.id !== itemId))
+    const updatedCartItems = cartItems.filter((item) => item.id !== itemId)
+    setCartItems(updatedCartItems)
+
+    // Update localStorage
+    localStorage.setItem("cartItems", JSON.stringify(updatedCartItems))
   }
 
   // Handler for saving an item for later
@@ -187,7 +204,11 @@ export default function Cart() {
       }
 
       // Add to cart items
-      setCartItems([...cartItems, newCartItem])
+      const updatedCartItems = [...cartItems, newCartItem]
+      setCartItems(updatedCartItems)
+
+      // Update localStorage
+      localStorage.setItem("cartItems", JSON.stringify(updatedCartItems))
 
       // Set initial quantity
       setQuantities({
@@ -200,23 +221,36 @@ export default function Cart() {
     }
   }
 
-  // Handler for coupon input change
-  const handleCouponChange = (event) => {
-    setCoupon(event.target.value)
-  }
+  // Handler for coupon input change - commented out to prevent console errors
+  // const handleCouponChange = (event) => {
+  //   setCoupon(event.target.value)
+  // }
 
   // Calculate order summary
   const subtotal = cartItems.reduce((sum, item) => {
-    return sum + item.price * quantities[item.id]
+    return sum + item.price * (quantities[item.id] || 1)
   }, 0)
+
+  // Calculate cashback based on percentage
+  const calculateCashback = (item, quantity) => {
+    const cashbackPercent = item.cashbackPercent || 0
+    return Math.round((item.price * quantity * cashbackPercent) / 100)
+  }
 
   const totalCashback = cartItems.reduce((sum, item) => {
-    return sum + item.cashback * quantities[item.id]
+    return sum + calculateCashback(item, quantities[item.id] || 1)
   }, 0)
 
-  const discount = 60.0
-  const tax = 14.0
-  const total = subtotal - discount + tax
+  // Discount commented out as requested
+  // const discount = 60
+  const tax = 14
+  const total = subtotal + tax
+
+  // Clear cart function
+  const clearCart = () => {
+    setCartItems([])
+    localStorage.removeItem("cartItems")
+  }
 
   return (
     // RESPONSIVE CHANGE 4: Add responsive padding
@@ -259,6 +293,7 @@ export default function Cart() {
                     bgcolor: "#1976d2",
                     "&:hover": { bgcolor: "#1565c0" },
                   }}
+                  onClick={() => (window.location.href = "/")}
                 >
                   Continue Shopping
                 </Button>
@@ -285,6 +320,18 @@ export default function Cart() {
                         <Typography variant="body1" fontWeight="medium" gutterBottom>
                           {item.name}
                         </Typography>
+                        {/* Item Code Chip */}
+                        <Chip
+                          label={`Item Code: ${item.itemCode || "N/A"}`}
+                          size="small"
+                          sx={{
+                            mb: 1,
+                            fontSize: "0.7rem",
+                            height: "20px",
+                            backgroundColor: "#f0f7ff",
+                            color: theme.palette.primary.main,
+                          }}
+                        />
                         <Typography variant="body2" color="text.secondary">
                           Size: {item.size}, Color: {item.color}
                         </Typography>
@@ -327,7 +374,7 @@ export default function Cart() {
                                 userSelect: "none",
                               }}
                             >
-                              {quantities[item.id]}
+                              {quantities[item.id] || 1}
                             </Typography>
                             <IconButton
                               size="small"
@@ -344,19 +391,19 @@ export default function Cart() {
 
                       <Grid item xs={6}>
                         <Typography variant="body1" fontWeight="bold" align="right">
-                          KSH{item.price.toFixed(2)}
+                          {item.price}/=
                         </Typography>
                       </Grid>
 
                       <Grid item xs={6}>
                         <Typography variant="body2" color="success.main">
-                          Cashback: KSH{(item.cashback * quantities[item.id]).toFixed(2)}
+                          Cashback: {calculateCashback(item, quantities[item.id] || 1)}/=
                         </Typography>
                       </Grid>
 
                       <Grid item xs={6}>
                         <Typography variant="body1" fontWeight="bold" align="right">
-                          Total: KSH{(item.price * quantities[item.id]).toFixed(2)}
+                          Total: {item.price * (quantities[item.id] || 1)}/=
                         </Typography>
                       </Grid>
 
@@ -410,7 +457,7 @@ export default function Cart() {
                       <TableCell align="right">Price</TableCell>
                       <TableCell align="right">Cashback</TableCell>
                       <TableCell align="right">Total</TableCell>
-                      <TableCell align="center">Actions</TableCell>
+                       <TableCell align="center">Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -433,8 +480,20 @@ export default function Cart() {
                           <Typography variant="body1" fontWeight="medium" gutterBottom>
                             {item.name}
                           </Typography>
+                          {/* Item Code */}
+                          <Chip
+                            label={`Item Code: ${item.itemCode || "N/A"}`}
+                            size="small"
+                            sx={{
+                              mb: 1,
+                              fontSize: "0.7rem",
+                              height: "20px",
+                              backgroundColor: "#f0f7ff",
+                              color: theme.palette.primary.main,
+                            }}
+                          />
                           <Typography variant="body2" color="text.secondary">
-                            Size: {item.size}, Color: {item.color}, Material: {item.material}
+                            Size: {item.size}, Color: {item.color}, Material: {item.material || "N/A"}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
                             Seller: {item.seller}
@@ -463,25 +522,25 @@ export default function Cart() {
                                 py: 0.5,
                               }}
                             >
-                              {quantities[item.id]}
+                              {quantities[item.id] || 1}
                             </Typography>
                             <IconButton
                               size="small"
                               onClick={() => decreaseQuantity(item.id)}
-                              disabled={quantities[item.id] <= 1}
+                              disabled={(quantities[item.id] || 1) <= 1}
                               sx={{ p: 0.5 }}
                             >
                               <KeyboardArrowDown fontSize="small" />
                             </IconButton>
                           </Box>
                         </TableCell>
-                        {/*cashback price calculation logit*/}
-                        <TableCell align="right">{item.price.toFixed(2)}/={/*price /=*/}</TableCell>
+                        {/* Price with /= */}
+                        <TableCell align="right">{item.price}/=</TableCell>
                         <TableCell align="right" sx={{ color: "success.main" }}>
-                          {(item.cashback * quantities[item.id]).toFixed(2)}/=
+                          {calculateCashback(item, quantities[item.id] || 1)}/=
                         </TableCell>
                         <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                          {(item.price * quantities[item.id]).toFixed(2)}
+                          {item.price * (quantities[item.id] || 1)}/=
                         </TableCell>
                         <TableCell align="center">
                           <Stack direction="row" spacing={1} justifyContent="center">
@@ -499,22 +558,11 @@ export default function Cart() {
                             >
                               <DeleteOutline fontSize="small" />
                             </Button>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              color="primary"
-                              onClick={() => saveForLater(item.id)}
-                              sx={{
-                                borderRadius: 1,
-                                textTransform: "none",
-                                minWidth: "auto",
-                                px: 1,
-                              }}
-                            >
-                              Save
-                            </Button>
+
                           </Stack>
                         </TableCell>
+
+      
                       </TableRow>
                     ))}
                   </TableBody>
@@ -544,6 +592,7 @@ export default function Cart() {
                   bgcolor: "#1976d2",
                   "&:hover": { bgcolor: "#1565c0" },
                 }}
+                onClick={() => (window.location.href = "/")}
               >
                 Back to shop
               </Button>
@@ -551,7 +600,7 @@ export default function Cart() {
               <Button
                 variant="text"
                 color="primary"
-                onClick={() => setCartItems([])}
+                onClick={clearCart}
                 fullWidth={isMobile}
                 sx={{ textTransform: "none" }}
               >
@@ -560,8 +609,8 @@ export default function Cart() {
             </Box>
           )}
 
-          {/* RESPONSIVE CHANGE 12: Responsive grid for info boxes */}
-          <Box sx={{ mb: 3 }}>
+          {/* Info boxes section commented out as in your code */}
+          {/* <Box sx={{ mb: 3 }}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={4}>
                 <Paper
@@ -665,7 +714,7 @@ export default function Cart() {
                 </Paper>
               </Grid>
             </Grid>
-          </Box>
+          </Box> */}
 
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" fontWeight="bold" gutterBottom mt={2}>
@@ -676,7 +725,28 @@ export default function Cart() {
             <Grid container spacing={2}>
               {savedItems.map((item) => (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
-                  <Card variant="outlined" sx={{ height: "100%" }}>
+                  <Card variant="outlined" sx={{ height: "100%", position: "relative" }}>
+                    {/* Cashback Badge */}
+                    <Typography
+                      variant="body2"
+                      color="white"
+                      fontWeight="bold"
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        left: 8,
+                        backgroundColor: "red",
+                        borderRadius: 1,
+                        px: 1.5,
+                        py: 0.5,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        zIndex: 1,
+                      }}
+                    >
+                      {item.cashbackPercent}% Cashback
+                    </Typography>
+
                     <CardMedia
                       component="img"
                       height="150"
@@ -686,11 +756,21 @@ export default function Cart() {
                     />
                     <CardContent sx={{ pt: 1, pb: 0 }}>
                       <Typography variant="h6" fontWeight="bold">
-                        {item.price.toFixed(2)}/=
+                        {item.price}/=
                       </Typography>
-                      <Typography variant="body2" color="success.main">
-                        Cashback: {item.cashback.toFixed(2)}/=
-                      </Typography>
+                      {/* Item Code for saved items */}
+                      <Chip
+                        label={`Item Code: ${item.itemCode || "N/A"}`}
+                        size="small"
+                        sx={{
+                          mt: 1,
+                          mb: 1,
+                          fontSize: "0.7rem",
+                          height: "20px",
+                          backgroundColor: "#f0f7ff",
+                          color: theme.palette.primary.main,
+                        }}
+                      />
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
                         {item.name}
                       </Typography>
@@ -704,7 +784,6 @@ export default function Cart() {
                         onClick={() => moveToCart(item.id)}
                         sx={{
                           textTransform: "none",
-                          // RESPONSIVE CHANGE 14: Larger touch targets on mobile
                           px: { xs: 2, md: 1 },
                           py: { xs: 1, md: 0.5 },
                         }}
@@ -741,7 +820,8 @@ export default function Cart() {
               top: { lg: "20px" },
             }}
           >
-            <Typography variant="body1" gutterBottom>
+            {/* Coupon section commented out to prevent console errors */}
+            {/* <Typography variant="body1" gutterBottom>
               Have a coupon?
             </Typography>
 
@@ -762,33 +842,35 @@ export default function Cart() {
               <Button variant="text" color="primary" sx={{ textTransform: "none" }}>
                 Apply
               </Button>
+            </Box> */}
+
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              <Typography variant="body1">CashBack:</Typography>
+              <Typography variant="body1" color="error">
+                - {totalCashback}/=
+              </Typography>
             </Box>
 
             <Divider sx={{ my: 2 }} />
 
             <Stack spacing={1}>
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography variant="body1">Subtotal:</Typography>
-                <Typography variant="body1">{subtotal.toFixed(2)}/=</Typography>
+                <Typography variant="body1">Subtotal Exclusive vat:</Typography>
+                <Typography variant="body1">{subtotal}/=</Typography>
               </Box>
 
-             { /****<Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              {/* Discount section commented out as requested */}
+              {/* <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Typography variant="body1">Discount:</Typography>
                 <Typography variant="body1" color="error">
-                  - KSH{discount.toFixed(2)}
+                  - {discount}/=
                 </Typography>
-              </Box>****/}
+              </Box> */}
 
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography variant="body1">Tax:</Typography>
+                <Typography variant="body1">VAT:</Typography>
                 <Typography variant="body1" color="primary">
-                  + {tax.toFixed(2)}/=
-                </Typography>
-              </Box>
-              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography variant="body1">CashBack:</Typography>
-                <Typography variant="body1" color="error">
-                  - {totalCashback.toFixed(2)}/=
+                  + {tax}/=
                 </Typography>
               </Box>
             </Stack>
@@ -800,7 +882,7 @@ export default function Cart() {
                 Total:
               </Typography>
               <Typography variant="h6" fontWeight="bold">
-                {(total - totalCashback).toFixed(2)}/=
+                {total - totalCashback}/=
               </Typography>
             </Box>
 
