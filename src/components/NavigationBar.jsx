@@ -265,32 +265,7 @@ const NavigationBar = () => {
         }}
       >
         {/* Mobile Top Bar - Contact Info */}
-        {isMobile && (
-          <Box
-            sx={{
-              bgcolor: "#f5f5f5",
-              py: 0.5,
-              px: 2,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              borderBottom: "1px solid #e0e0e0",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <PhoneIcon fontSize="small" color="primary" />
-              <Typography variant="caption" color="text.secondary">
-                +254 712 345 678
-              </Typography>
-            </Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <MailIcon fontSize="small" color="primary" />
-              <Typography variant="caption" color="text.secondary">
-                info@firstcraft.com
-              </Typography>
-            </Box>
-          </Box>
-        )}
+
 
         <Container
           maxWidth="xl"
@@ -336,7 +311,7 @@ const NavigationBar = () => {
                     src={FirstCraftLogo}
                     alt="FirstCraft Logo"
                     sx={{
-                      height: { xs: "50px", sm: "70px" }, // Smaller on mobile
+                      height: { xs: "70px", sm: "70px" }, // Smaller on mobile
                       maxWidth: "100%", // Ensure it doesn't overflow
                       objectFit: "contain", // Maintain aspect ratio
                     }}
@@ -789,7 +764,7 @@ const NavigationBar = () => {
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
               <PhoneIcon fontSize="small" color="primary" />
-              <Typography variant="body2">+254 712 345 678</Typography>
+              <Typography variant="body2">+254 722517263</Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <MailIcon fontSize="small" color="primary" />
