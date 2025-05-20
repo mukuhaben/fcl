@@ -1,36 +1,67 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme, responsiveFontSizes } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import IndexPage from './pages/Home/View';
-import NavigationBar from './components/NavigationBar';
-import Footer from './components/Footer';
-import ProductDetails from './pages/ProductDetails/View/Index';
-import Cart from './pages/Cart/View/Index';
-import RegisterPage from './pages/Registration/View/Index';
-import LoginPage from './pages/Login/View/Index';
-import RegistrationForm from './pages/Registration/View/Index';
+"use client"
+
+import React, { useState, useEffect } from "react"
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { ThemeProvider, createTheme, responsiveFontSizes } from "@mui/material/styles"
+import CssBaseline from "@mui/material/CssBaseline"
+import useMediaQuery from "@mui/material/useMediaQuery"
+import IndexPage from "./pages/Home/View"
+import NavigationBar from "./components/NavigationBar"
+import Footer from "./components/Footer"
+import ProductDetails from "./pages/ProductDetails/View/Index"
+import Cart from "./pages/Cart/View/Index"
+import RegisterPage from "./pages/Registration/View/Index"
+import LoginPage from "./pages/Login/View/Index"
+import RegistrationForm from "./pages/Registration/View/Index"
+import AccountPage from "./pages/Account/View/Index"
+import WalletPage from "./pages/Wallet/View/Index"
 
 function App() {
   // Detect preferred color scheme (light/dark mode)
-  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: light)');
-  
+  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: light)")
+
+  // State for user authentication
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
+
+  // Check if user is logged in from localStorage on component mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("currentUser")
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser))
+      setIsLoggedIn(true)
+    }
+  }, [])
+
+  // Login function
+  const handleLogin = (userData) => {
+    setCurrentUser(userData)
+    setIsLoggedIn(true)
+    localStorage.setItem("currentUser", JSON.stringify(userData))
+  }
+
+  // Logout function
+  const handleLogout = () => {
+    setCurrentUser(null)
+    setIsLoggedIn(false)
+    localStorage.removeItem("currentUser")
+  }
+
   // Create a responsive theme
   let theme = React.useMemo(
     () =>
       createTheme({
         palette: {
-          mode: prefersDarkMode ? 'dark' : 'light',
+          mode: prefersDarkMode ? "dark" : "light",
           primary: {
-            main: '#0056B3',
+            main: "#0056B3",
           },
           secondary: {
-            main: '#800080',
+            main: "#800080",
           },
           success: {
-            main: '#4CAF50',
-          }
+            main: "#4CAF50",
+          },
         },
         // Add responsive breakpoints configuration
         breakpoints: {
@@ -48,12 +79,12 @@ function App() {
         typography: {
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
           h1: {
-            fontSize: '2.5rem',
-            '@media (min-width:600px)': {
-              fontSize: '3rem',
+            fontSize: "2.5rem",
+            "@media (min-width:600px)": {
+              fontSize: "3rem",
             },
-            '@media (min-width:900px)': {
-              fontSize: '3.5rem',
+            "@media (min-width:900px)": {
+              fontSize: "3.5rem",
             },
           },
           // Add more responsive typography settings for other elements
@@ -63,11 +94,11 @@ function App() {
           MuiContainer: {
             styleOverrides: {
               root: {
-                paddingLeft: '16px',
-                paddingRight: '16px',
-                '@media (min-width:600px)': {
-                  paddingLeft: '24px',
-                  paddingRight: '24px',
+                paddingLeft: "16px",
+                paddingRight: "16px",
+                "@media (min-width:600px)": {
+                  paddingLeft: "24px",
+                  paddingRight: "24px",
                 },
               },
             },
@@ -75,34 +106,36 @@ function App() {
         },
       }),
     [prefersDarkMode],
-  );
-  
+  )
+
   // Apply responsive font sizes
-  theme = responsiveFontSizes(theme);
+  theme = responsiveFontSizes(theme)
 
   return (
     <ThemeProvider theme={theme}>
       {/* CssBaseline provides consistent baseline styles */}
       <CssBaseline />
       <BrowserRouter>
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-          <NavigationBar />
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+          <NavigationBar isLoggedIn={isLoggedIn} currentUser={currentUser} onLogout={handleLogout} />
           <main style={{ flexGrow: 1 }}>
             <Routes>
               <Route path="/" element={<IndexPage />} />
               <Route path="/product-details" element={<ProductDetails />} />
               <Route path="/product-details/:id" element={<ProductDetails />} />
-              <Route path='/register' element={<RegisterPage />} />
-              <Route path='/login' element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
               <Route path="/cart" element={<Cart />} />
-              <Route path='/RegistrationForm' element={<RegistrationForm />} />
+              <Route path="/RegistrationForm" element={<RegistrationForm />} />
+              <Route path="/account" element={<AccountPage />} />
+              <Route path="/wallet" element={<WalletPage />} />
             </Routes>
           </main>
           <Footer />
         </div>
       </BrowserRouter>
     </ThemeProvider>
-  );
+  )
 }
 
-export default App;
+export default App

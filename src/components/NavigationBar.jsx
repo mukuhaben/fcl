@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import {
   AppBar,
   Toolbar,
@@ -30,6 +30,9 @@ import {
   InputAdornment,
   Divider,
   Avatar,
+  Menu,
+  MenuItem,
+  ListItemIcon,
 } from "@mui/material"
 import {
   Menu as MenuIcon,
@@ -45,11 +48,17 @@ import {
   Home as HomeIcon,
   Phone as PhoneIcon,
   Mail as MailIcon,
+  AccountCircle,
+  Settings,
+  ExitToApp,
+  Inbox,
+  ShoppingBag,
 } from "@mui/icons-material"
 import { styled, alpha, useTheme } from "@mui/material/styles"
 import { useNavigate } from "react-router-dom"
 import FirstCraftLogo from "../assets/images/FirstCraft-logo.png"
 import RegistrationForm from "../pages/Registration/View/Index" // Update this path to match your file structure
+import LoginPage from "../pages/Login/View/Index" // Import LoginPage
 
 // Styled Components
 const Search = styled("div")(({ theme }) => ({
@@ -170,7 +179,7 @@ const DropdownItem = styled("div")(({ theme }) => ({
   },
 }))
 
-const NavigationBar = () => {
+const NavigationBar = ({ isLoggedIn, currentUser, onLogout }) => {
   const navigate = useNavigate()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
@@ -182,7 +191,21 @@ const NavigationBar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerSubmenus, setDrawerSubmenus] = useState({})
   const [registrationOpen, setRegistrationOpen] = useState(false)
+  const [loginOpen, setLoginOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+
+  // State for user menu
+  const [userMenuAnchorEl, setUserMenuAnchorEl] = useState(null)
+  const userMenuOpen = Boolean(userMenuAnchorEl)
+
+  // State for cart items count
+  const [cartItemsCount, setCartItemsCount] = useState(0)
+
+  // Get cart items count from localStorage
+  useEffect(() => {
+    const storedCartItems = JSON.parse(localStorage.getItem("cartItems")) || []
+    setCartItemsCount(storedCartItems.length)
+  }, [])
 
   // State for tooltips
   const [activeTooltip, setActiveTooltip] = useState("")
@@ -229,10 +252,20 @@ const NavigationBar = () => {
 
   const handleOpenRegistration = () => {
     setRegistrationOpen(true)
+    setLoginOpen(false)
   }
 
   const handleCloseRegistration = () => {
     setRegistrationOpen(false)
+  }
+
+  const handleOpenLogin = () => {
+    setLoginOpen(true)
+    setRegistrationOpen(false)
+  }
+
+  const handleCloseLogin = () => {
+    setLoginOpen(false)
   }
 
   // Toggle mobile search
@@ -252,6 +285,29 @@ const NavigationBar = () => {
     menuRefs.current[menuName] = element
   }
 
+  // Handle user menu open
+  const handleUserMenuOpen = (event) => {
+    setUserMenuAnchorEl(event.currentTarget)
+  }
+
+  // Handle user menu close
+  const handleUserMenuClose = () => {
+    setUserMenuAnchorEl(null)
+  }
+
+  // Handle logout
+  const handleLogout = () => {
+    handleUserMenuClose()
+    if (onLogout) onLogout()
+    navigate("/")
+  }
+
+  // Handle login success
+  const handleLoginSuccess = (userData) => {
+    handleCloseLogin()
+    // In a real app, you would update the user state here
+  }
+
   return (
     <>
       <AppBar
@@ -265,7 +321,6 @@ const NavigationBar = () => {
         }}
       >
         {/* Mobile Top Bar - Contact Info */}
-
 
         <Container
           maxWidth="xl"
@@ -426,15 +481,28 @@ const NavigationBar = () => {
                 </Tooltip>
 
                 {/* Profile Icon with Tooltip */}
-                <Tooltip title="My Profile" arrow>
+                <Tooltip title={isLoggedIn ? "My Account" : "Sign In"} arrow>
                   <IconButton
                     size={isMobile ? "small" : "medium"}
                     sx={{ color: theme.palette.primary.contrastText }}
-                    onClick={() => navigate("/account")}
+                    onClick={isLoggedIn ? handleUserMenuOpen : handleOpenLogin}
                     onMouseEnter={() => handleTooltipOpen("profile")}
                     onMouseLeave={handleTooltipClose}
                   >
-                    <PersonIcon fontSize={isMobile ? "small" : "medium"} />
+                    {isLoggedIn ? (
+                      <Avatar
+                        sx={{
+                          width: isMobile ? 24 : 32,
+                          height: isMobile ? 24 : 32,
+                          bgcolor: theme.palette.secondary.main,
+                          fontSize: isMobile ? "0.75rem" : "1rem",
+                        }}
+                      >
+                        {currentUser?.username?.charAt(0) || <PersonIcon fontSize={isMobile ? "small" : "medium"} />}
+                      </Avatar>
+                    ) : (
+                      <PersonIcon fontSize={isMobile ? "small" : "medium"} />
+                    )}
                   </IconButton>
                 </Tooltip>
 
@@ -447,7 +515,7 @@ const NavigationBar = () => {
                     onMouseEnter={() => handleTooltipOpen("cart")}
                     onMouseLeave={handleTooltipClose}
                   >
-                    <Badge badgeContent={0} color="error">
+                    <Badge badgeContent={cartItemsCount} color="error">
                       <ShoppingCartIcon fontSize={isMobile ? "small" : "medium"} />
                     </Badge>
                   </IconButton>
@@ -460,8 +528,15 @@ const NavigationBar = () => {
                   </WalletButton>
                 )}
 
-                {/* Register Button - Desktop only */}
-                {!isMobile && <RegisterButton onClick={handleOpenRegistration}>Register</RegisterButton>}
+                {/* Register/Login Button - Desktop only */}
+                {!isMobile && !isLoggedIn && <RegisterButton onClick={handleOpenRegistration}>Register</RegisterButton>}
+
+                {/* User greeting - Desktop only */}
+                {!isMobile && isLoggedIn && (
+                  <Typography variant="body2" sx={{ ml: 1, fontWeight: "medium" }}>
+                    Hello, {currentUser?.username || "User"}
+                  </Typography>
+                )}
               </Box>
             </Box>
           </Toolbar>
@@ -588,51 +663,103 @@ const NavigationBar = () => {
               alignItems: "center",
             }}
           >
-            <Avatar
-              sx={{
-                width: 64,
-                height: 64,
-                mb: 1,
-                bgcolor: theme.palette.primary.light,
-              }}
-            >
-              <PersonIcon fontSize="large" />
-            </Avatar>
-            <Typography variant="subtitle1" fontWeight="bold">
-              Welcome
-            </Typography>
-            <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-              <Button
-                variant="outlined"
-                size="small"
-                sx={{
-                  color: "white",
-                  borderColor: "white",
-                  "&:hover": { borderColor: "white", bgcolor: "rgba(255,255,255,0.1)" },
-                }}
-                onClick={() => {
-                  toggleDrawer()
-                  navigate("/login")
-                }}
-              >
-                Sign In
-              </Button>
-              <Button
-                variant="contained"
-                size="small"
-                sx={{
-                  bgcolor: "white",
-                  color: theme.palette.primary.main,
-                  "&:hover": { bgcolor: "rgba(255,255,255,0.9)" },
-                }}
-                onClick={() => {
-                  toggleDrawer()
-                  handleOpenRegistration()
-                }}
-              >
-                Register
-              </Button>
-            </Box>
+            {isLoggedIn ? (
+              <>
+                <Avatar
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    mb: 1,
+                    bgcolor: theme.palette.secondary.main,
+                  }}
+                >
+                  {currentUser?.username?.charAt(0) || <PersonIcon fontSize="large" />}
+                </Avatar>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Hello, {currentUser?.username || "User"}
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      color: "white",
+                      borderColor: "white",
+                      "&:hover": { borderColor: "white", bgcolor: "rgba(255,255,255,0.1)" },
+                    }}
+                    onClick={() => {
+                      toggleDrawer()
+                      navigate("/account")
+                    }}
+                  >
+                    My Account
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      bgcolor: "white",
+                      color: theme.palette.primary.main,
+                      "&:hover": { bgcolor: "rgba(255,255,255,0.9)" },
+                    }}
+                    onClick={() => {
+                      toggleDrawer()
+                      handleLogout()
+                    }}
+                  >
+                    Logout
+                  </Button>
+                </Box>
+              </>
+            ) : (
+              <>
+                <Avatar
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    mb: 1,
+                    bgcolor: theme.palette.primary.light,
+                  }}
+                >
+                  <PersonIcon fontSize="large" />
+                </Avatar>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Welcome
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      color: "white",
+                      borderColor: "white",
+                      "&:hover": { borderColor: "white", bgcolor: "rgba(255,255,255,0.1)" },
+                    }}
+                    onClick={() => {
+                      toggleDrawer()
+                      handleOpenLogin()
+                    }}
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      bgcolor: "white",
+                      color: theme.palette.primary.main,
+                      "&:hover": { bgcolor: "rgba(255,255,255,0.9)" },
+                    }}
+                    onClick={() => {
+                      toggleDrawer()
+                      handleOpenRegistration()
+                    }}
+                  >
+                    Register
+                  </Button>
+                </Box>
+              </>
+            )}
           </Box>
 
           {/* Search in drawer */}
@@ -668,7 +795,7 @@ const NavigationBar = () => {
                 navigate("/cart")
               }}
             >
-              <Badge badgeContent={0} color="error">
+              <Badge badgeContent={cartItemsCount} color="error">
                 <ShoppingCartIcon />
               </Badge>
             </IconButton>
@@ -711,6 +838,26 @@ const NavigationBar = () => {
                 />
               </ListItemButton>
             </ListItem>
+
+            {isLoggedIn && (
+              <ListItem disablePadding>
+                <ListItemButton
+                  onClick={() => {
+                    toggleDrawer()
+                    navigate("/account")
+                  }}
+                >
+                  <ListItemText
+                    primary={
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <AccountCircle fontSize="small" color="primary" />
+                        <span>My Account</span>
+                      </Box>
+                    }
+                  />
+                </ListItemButton>
+              </ListItem>
+            )}
 
             <ListItem disablePadding>
               <ListItemButton>
@@ -774,6 +921,82 @@ const NavigationBar = () => {
         </Box>
       </Drawer>
 
+      {/* User Menu */}
+      <Menu
+        anchorEl={userMenuAnchorEl}
+        open={userMenuOpen}
+        onClose={handleUserMenuClose}
+        PaperProps={{
+          elevation: 3,
+          sx: { minWidth: 200 },
+        }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      >
+        <MenuItem
+          onClick={() => {
+            handleUserMenuClose()
+            navigate("/account")
+          }}
+        >
+          <ListItemIcon>
+            <AccountCircle fontSize="small" />
+          </ListItemIcon>
+          My Account
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleUserMenuClose()
+            navigate("/wallet")
+          }}
+        >
+          <ListItemIcon>
+            <WalletIcon fontSize="small" />
+          </ListItemIcon>
+          E-Wallet
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleUserMenuClose()
+            navigate("/cart")
+          }}
+        >
+          <ListItemIcon>
+            <ShoppingBag fontSize="small" />
+          </ListItemIcon>
+          My Orders
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleUserMenuClose()
+            navigate("/account")
+          }}
+        >
+          <ListItemIcon>
+            <Inbox fontSize="small" />
+          </ListItemIcon>
+          Inbox
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleUserMenuClose()
+            navigate("/account")
+          }}
+        >
+          <ListItemIcon>
+            <Settings fontSize="small" />
+          </ListItemIcon>
+          Settings
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={handleLogout}>
+          <ListItemIcon>
+            <ExitToApp fontSize="small" />
+          </ListItemIcon>
+          Logout
+        </MenuItem>
+      </Menu>
+
       {/* Registration Form Dialog */}
       <Dialog
         open={registrationOpen}
@@ -807,6 +1030,55 @@ const NavigationBar = () => {
         <DialogContent dividers sx={{ p: 0, bgcolor: "#f5f5f5", overflowX: "hidden" }}>
           <RegistrationForm />
         </DialogContent>
+      </Dialog>
+
+      {/* Login Dialog */}
+      <Dialog
+        open={loginOpen}
+        onClose={handleCloseLogin}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "8px",
+            maxHeight: "90vh",
+            width: { xs: "95%", sm: "90%", md: "500px" }, // Responsive width
+            margin: { xs: "10px", sm: "auto" }, // Proper margins on mobile
+          },
+        }}
+      >
+        <DialogTitle sx={{ m: 0, p: 2, bgcolor: theme.palette.primary.main, color: "white" }}>
+          Sign In
+          <MuiIconButton
+            aria-label="close"
+            onClick={handleCloseLogin}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              color: "white",
+            }}
+          >
+            <CloseIcon />
+          </MuiIconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0, bgcolor: "#f5f5f5", overflowX: "hidden" }}>
+          <LoginPage onLogin={handleLoginSuccess} />
+        </DialogContent>
+        <Box sx={{ p: 2, textAlign: "center" }}>
+          <Typography variant="body2">
+            Don't have an account?{" "}
+            <Button
+              color="primary"
+              onClick={() => {
+                handleCloseLogin()
+                handleOpenRegistration()
+              }}
+            >
+              Register
+            </Button>
+          </Typography>
+        </Box>
       </Dialog>
     </>
   )
