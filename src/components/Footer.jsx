@@ -1,4 +1,3 @@
-"use client"
 import { Box, Grid, Typography, Link, IconButton, Stack, useTheme, useMediaQuery } from "@mui/material"
 import FacebookIcon from "@mui/icons-material/Facebook"
 import TwitterIcon from "@mui/icons-material/Twitter"

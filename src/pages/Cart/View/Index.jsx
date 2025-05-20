@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import {
   Box,
@@ -9,10 +7,6 @@ import {
   Button,
   Divider,
   IconButton,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
   Stack,
   Table,
   TableBody,
@@ -24,16 +18,20 @@ import {
   useTheme,
   Chip,
 } from "@mui/material"
-import { ShoppingCart, KeyboardArrowDown, ArrowBack, KeyboardArrowUp, DeleteOutline } from "@mui/icons-material"
+import { KeyboardArrowDown, ArrowBack, KeyboardArrowUp, DeleteOutline } from "@mui/icons-material"
 import softChairsImage from "../../../assets/images/1.png"
 import sofaChairImage from "../../../assets/images/2.png"
 import kitchenDishesImage from "../../../assets/images/11.png"
 import smartWatchesImage from "../../../assets/images/8.png"
 import kitchenMixerImage from "../../../assets/images/9.png"
-import blendersImage from "../../../assets/images/12.png"
 import homeApplianceImage from "../../../assets/images/10.png"
 import coffeeMakerImage from "../../../assets/images/13.png"
 import NewsletterSubscription from "../../../components/NewsLetter"
+
+// Helper function to format numbers with commas
+const formatNumberWithCommas = (number) => {
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
 
 export default function Cart() {
   // Initial cart items data with cashback added
@@ -45,7 +43,7 @@ export default function Cart() {
       color: "blue",
       material: "Plastic",
       seller: "Artist Market",
-      price: 79, // Removed decimals
+      price: 79000, // Removed decimals
       cashbackPercent: 5, // 5% cashback
       image: softChairsImage,
       itemCode: "SC001",
@@ -57,7 +55,7 @@ export default function Cart() {
       color: "blue",
       material: "Plastic",
       seller: "Best factory LLC",
-      price: 39, // Removed decimals
+      price: 39000, // Removed decimals
       cashbackPercent: 5, // 5% cashback
       image: sofaChairImage,
       itemCode: "TS001",
@@ -69,7 +67,7 @@ export default function Cart() {
       color: "blue",
       material: "Plastic",
       seller: "Artist Market",
-      price: 171, // Removed decimals
+      price: 171000, // Removed decimals
       cashbackPercent: 5, // 5% cashback
       image: kitchenDishesImage,
       itemCode: "TS002",
@@ -90,42 +88,6 @@ export default function Cart() {
     }
   }, [])
 
-  // State for saved items
-  const [savedItems, setSavedItems] = useState([
-    {
-      id: "saved1",
-      name: "GoPro HERO6 4K Action Camera - Black",
-      price: 100, // Removed decimals
-      cashbackPercent: 5, // 5% cashback
-      image: smartWatchesImage,
-      itemCode: "GP001",
-    },
-    {
-      id: "saved2",
-      name: "GoPro HERO6 4K Action Camera - Black",
-      price: 100, // Removed decimals
-      cashbackPercent: 5, // 5% cashback
-      image: kitchenMixerImage,
-      itemCode: "GP002",
-    },
-    {
-      id: "saved3",
-      name: "GoPro HERO6 4K Action Camera - Black",
-       // Removed decimals
-      cashbackPercent: 5, // 5% cashback
-      image: blendersImage,
-      itemCode: "GP003",
-    },
-    {
-      id: "saved4",
-      name: "GoPro HERO6 4K Action Camera - Black",
-      price: 1000,// Removed decimals
-      cashbackPercent: 5, // 5% cashback
-      image: homeApplianceImage,
-      itemCode: "GP004",
-    },
-  ]) 
-
   // State for quantity selectors
   const [quantities, setQuantities] = useState({})
 
@@ -138,12 +100,10 @@ export default function Cart() {
     setQuantities(initialQuantities)
   }, [cartItems])
 
-  // State for coupon input - commented out to prevent console errors
-  // const [coupon, setCoupon] = useState("")
-
   // RESPONSIVE CHANGE 2: Add theme and isMobile detection
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
+  const isSmallLaptop = useMediaQuery(theme.breakpoints.down("lg"))
 
   // RESPONSIVE CHANGE 3: Add helper function for responsive values
   const responsiveValue = (mobileValue, desktopValue) => {
@@ -176,56 +136,6 @@ export default function Cart() {
     localStorage.setItem("cartItems", JSON.stringify(updatedCartItems))
   }
 
-  // Handler for saving an item for later
-  const saveForLater = (itemId) => {
-    const itemToSave = cartItems.find((item) => item.id === itemId)
-    if (itemToSave) {
-      // Add to saved items with a new ID
-      setSavedItems([
-        ...savedItems,
-        {
-          ...itemToSave,
-          id: `saved${savedItems.length + 1}`,
-        },
-      ])
-      // Remove from cart
-      removeItem(itemId)
-    }
-  }
-
-  // Handler for moving an item from saved to cart
-  const moveToCart = (savedItemId) => {
-    const itemToMove = savedItems.find((item) => item.id === savedItemId)
-    if (itemToMove) {
-      // Create a new cart item with a unique ID
-      const newCartItem = {
-        ...itemToMove,
-        id: `item${cartItems.length + 1}`,
-      }
-
-      // Add to cart items
-      const updatedCartItems = [...cartItems, newCartItem]
-      setCartItems(updatedCartItems)
-
-      // Update localStorage
-      localStorage.setItem("cartItems", JSON.stringify(updatedCartItems))
-
-      // Set initial quantity
-      setQuantities({
-        ...quantities,
-        [newCartItem.id]: 1,
-      })
-
-      // Remove from saved items
-      setSavedItems(savedItems.filter((item) => item.id !== savedItemId))
-    }
-  }
-
-  // Handler for coupon input change - commented out to prevent console errors
-  // const handleCouponChange = (event) => {
-  //   setCoupon(event.target.value)
-  // }
-
   // Calculate order summary
   const subtotal = cartItems.reduce((sum, item) => {
     return sum + item.price * (quantities[item.id] || 1)
@@ -243,7 +153,7 @@ export default function Cart() {
 
   // Discount commented out as requested
   // const discount = 60
-  const tax = 14
+  const tax = 14000
   const total = subtotal + tax
 
   // Clear cart function
@@ -326,8 +236,8 @@ export default function Cart() {
                           size="small"
                           sx={{
                             mb: 1,
-                            fontSize: "0.7rem",
-                            height: "20px",
+                            fontSize: "0.85rem", // Increased font size
+                            height: "24px", // Increased height
                             backgroundColor: "#f0f7ff",
                             color: theme.palette.primary.main,
                           }}
@@ -372,6 +282,7 @@ export default function Cart() {
                                 flex: 1,
                                 textAlign: "center",
                                 userSelect: "none",
+                                fontSize: "1rem", // Increased font size
                               }}
                             >
                               {quantities[item.id] || 1}
@@ -390,20 +301,20 @@ export default function Cart() {
                       </Grid>
 
                       <Grid item xs={6}>
-                        <Typography variant="body1" fontWeight="bold" align="right">
-                          {item.price}/=
+                        <Typography variant="body1" fontWeight="bold" align="right" sx={{ fontSize: "1.1rem" }}>
+                          {formatNumberWithCommas(item.price)}/=
                         </Typography>
                       </Grid>
 
                       <Grid item xs={6}>
-                        <Typography variant="body2" color="success.main">
-                          Cashback: {calculateCashback(item, quantities[item.id] || 1)}/=
+                        <Typography variant="body2" color="success.main" sx={{ fontSize: "0.95rem" }}>
+                          Cashback: {formatNumberWithCommas(calculateCashback(item, quantities[item.id] || 1))}/=
                         </Typography>
                       </Grid>
 
                       <Grid item xs={6}>
-                        <Typography variant="body1" fontWeight="bold" align="right">
-                          Total: {item.price * (quantities[item.id] || 1)}/=
+                        <Typography variant="body1" fontWeight="bold" align="right" sx={{ fontSize: "1.1rem" }}>
+                          Total: {formatNumberWithCommas(item.price * (quantities[item.id] || 1))}/=
                         </Typography>
                       </Grid>
 
@@ -422,23 +333,10 @@ export default function Cart() {
                               textTransform: "none",
                               px: 2, // More horizontal padding for touch targets
                               py: 1, // More vertical padding for touch targets
+                              fontSize: "0.9rem", // Increased font size
                             }}
                           >
                             Remove
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            color="primary"
-                            onClick={() => saveForLater(item.id)}
-                            sx={{
-                              borderRadius: 1,
-                              textTransform: "none",
-                              px: 2, // More horizontal padding for touch targets
-                              py: 1, // More vertical padding for touch targets
-                            }}
-                          >
-                            Save for later
                           </Button>
                         </Box>
                       </Grid>
@@ -457,7 +355,7 @@ export default function Cart() {
                       <TableCell align="right">Price</TableCell>
                       <TableCell align="right">Cashback</TableCell>
                       <TableCell align="right">Total</TableCell>
-                       <TableCell align="center">Actions</TableCell>
+                      <TableCell align="center">Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -477,7 +375,7 @@ export default function Cart() {
                           />
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body1" fontWeight="medium" gutterBottom>
+                          <Typography variant="body1" fontWeight="medium" gutterBottom sx={{ fontSize: "1rem" }}>
                             {item.name}
                           </Typography>
                           {/* Item Code */}
@@ -486,16 +384,16 @@ export default function Cart() {
                             size="small"
                             sx={{
                               mb: 1,
-                              fontSize: "0.7rem",
-                              height: "20px",
+                              fontSize: "0.85rem", // Increased font size
+                              height: "24px", // Increased height
                               backgroundColor: "#f0f7ff",
                               color: theme.palette.primary.main,
                             }}
                           />
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.95rem" }}>
                             Size: {item.size}, Color: {item.color}, Material: {item.material || "N/A"}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.95rem" }}>
                             Seller: {item.seller}
                           </Typography>
                         </TableCell>
@@ -520,6 +418,7 @@ export default function Cart() {
                                 textAlign: "center",
                                 userSelect: "none",
                                 py: 0.5,
+                                fontSize: "0.95rem", // Increased font size
                               }}
                             >
                               {quantities[item.id] || 1}
@@ -534,13 +433,15 @@ export default function Cart() {
                             </IconButton>
                           </Box>
                         </TableCell>
-                        {/* Price with /= */}
-                        <TableCell align="right">{item.price}/=</TableCell>
-                        <TableCell align="right" sx={{ color: "success.main" }}>
-                          {calculateCashback(item, quantities[item.id] || 1)}/=
+                        {/* Price with /= and commas */}
+                        <TableCell align="right" sx={{ fontSize: "1rem" }}>
+                          {formatNumberWithCommas(item.price)}/=
                         </TableCell>
-                        <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                          {item.price * (quantities[item.id] || 1)}/=
+                        <TableCell align="right" sx={{ color: "success.main", fontSize: "1rem" }}>
+                          {formatNumberWithCommas(calculateCashback(item, quantities[item.id] || 1))}/=
+                        </TableCell>
+                        <TableCell align="right" sx={{ fontWeight: "bold", fontSize: "1rem" }}>
+                          {formatNumberWithCommas(item.price * (quantities[item.id] || 1))}/=
                         </TableCell>
                         <TableCell align="center">
                           <Stack direction="row" spacing={1} justifyContent="center">
@@ -554,15 +455,13 @@ export default function Cart() {
                                 textTransform: "none",
                                 minWidth: "auto",
                                 px: 1,
+                                fontSize: "0.9rem", // Increased font size
                               }}
                             >
                               <DeleteOutline fontSize="small" />
                             </Button>
-
                           </Stack>
                         </TableCell>
-
-      
                       </TableRow>
                     ))}
                   </TableBody>
@@ -591,6 +490,7 @@ export default function Cart() {
                   textTransform: "none",
                   bgcolor: "#1976d2",
                   "&:hover": { bgcolor: "#1565c0" },
+                  fontSize: "1rem", // Increased font size
                 }}
                 onClick={() => (window.location.href = "/")}
               >
@@ -602,210 +502,12 @@ export default function Cart() {
                 color="primary"
                 onClick={clearCart}
                 fullWidth={isMobile}
-                sx={{ textTransform: "none" }}
+                sx={{ textTransform: "none", fontSize: "1rem" }} // Increased font size
               >
                 Remove all
               </Button>
             </Box>
           )}
-
-          {/* Info boxes section commented out as in your code */}
-          {/* <Box sx={{ mb: 3 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    height: "100%",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      bgcolor: "#f0f0f0",
-                      borderRadius: "50%",
-                      p: 1,
-                      mr: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Lock color="action" />
-                  </Box>
-                  <Box>
-                    <Typography variant="body1" fontWeight="medium">
-                      Secure payment
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Have you ever finally just
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Grid>
-
-              <Grid item xs={12} sm={4}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    height: "100%",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      bgcolor: "#f0f0f0",
-                      borderRadius: "50%",
-                      p: 1,
-                      mr: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Headset color="action" />
-                  </Box>
-                  <Box>
-                    <Typography variant="body1" fontWeight="medium">
-                      Customer support
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Have you ever finally just
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Grid>
-
-              <Grid item xs={12} sm={4}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    height: "100%",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      bgcolor: "#f0f0f0",
-                      borderRadius: "50%",
-                      p: 1,
-                      mr: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <LocalShipping color="action" />
-                  </Box>
-                  <Box>
-                    <Typography variant="body1" fontWeight="medium">
-                      Delivery
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Have you ever finally just
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Box> */}
-
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom mt={2}>
-              Saved for later ({savedItems.length})
-            </Typography>
-
-            {/* RESPONSIVE CHANGE 13: Responsive grid for saved items */}
-            <Grid container spacing={2}>
-              {savedItems.map((item) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
-                  <Card variant="outlined" sx={{ height: "100%", position: "relative" }}>
-                    {/* Cashback Badge */}
-                    <Typography
-                      variant="body2"
-                      color="white"
-                      fontWeight="bold"
-                      sx={{
-                        position: "absolute",
-                        top: 8,
-                        left: 8,
-                        backgroundColor: "red",
-                        borderRadius: 1,
-                        px: 1.5,
-                        py: 0.5,
-                        fontSize: 12,
-                        fontWeight: 700,
-                        zIndex: 1,
-                      }}
-                    >
-                      {item.cashbackPercent}% Cashback
-                    </Typography>
-
-                    <CardMedia
-                      component="img"
-                      height="150"
-                      image={item.image}
-                      alt={item.name}
-                      sx={{ objectFit: "contain", p: 2 }}
-                    />
-                    <CardContent sx={{ pt: 1, pb: 0 }}>
-                      <Typography variant="h6" fontWeight="bold">
-                        {item.price}/=
-                      </Typography>
-                      {/* Item Code for saved items */}
-                      <Chip
-                        label={`Item Code: ${item.itemCode || "N/A"}`}
-                        size="small"
-                        sx={{
-                          mt: 1,
-                          mb: 1,
-                          fontSize: "0.7rem",
-                          height: "20px",
-                          backgroundColor: "#f0f7ff",
-                          color: theme.palette.primary.main,
-                        }}
-                      />
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
-                        {item.name}
-                      </Typography>
-                    </CardContent>
-                    <CardActions sx={{ justifyContent: "center", pb: 2 }}>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        startIcon={<ShoppingCart />}
-                        size="small"
-                        onClick={() => moveToCart(item.id)}
-                        sx={{
-                          textTransform: "none",
-                          px: { xs: 2, md: 1 },
-                          py: { xs: 1, md: 0.5 },
-                        }}
-                      >
-                        Move to cart
-                      </Button>
-                    </CardActions>
-                  </Card>
-                </Grid>
-              ))}
-
-              {savedItems.length === 0 && (
-                <Grid item xs={12}>
-                  <Paper variant="outlined" sx={{ p: 4, textAlign: "center" }}>
-                    <Typography variant="body1" color="text.secondary">
-                      You don't have any saved items
-                    </Typography>
-                  </Paper>
-                </Grid>
-              )}
-            </Grid>
-          </Box>
         </Grid>
 
         {/* Order Summary */}
@@ -820,57 +522,36 @@ export default function Cart() {
               top: { lg: "20px" },
             }}
           >
-            {/* Coupon section commented out to prevent console errors */}
-            {/* <Typography variant="body1" gutterBottom>
-              Have a coupon?
-            </Typography>
-
-            <Box sx={{ display: "flex", mb: 3 }}>
-              <TextField
-                placeholder="Add coupon"
-                size="small"
-                value={coupon}
-                onChange={handleCouponChange}
-                sx={{
-                  flexGrow: 1,
-                  mr: 1,
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "4px",
-                  },
-                }}
-              />
-              <Button variant="text" color="primary" sx={{ textTransform: "none" }}>
-                Apply
-              </Button>
-            </Box> */}
-
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-              <Typography variant="body1">CashBack:</Typography>
-              <Typography variant="body1" color="error">
-                - {totalCashback}/=
+              <Typography variant="body1" sx={{ fontSize: "1.05rem" }}>
+                Cashback Earned:
+              </Typography>
+              <Typography variant="body1" color="success.main" sx={{ fontSize: "1.05rem" }}>
+                {formatNumberWithCommas(totalCashback)}/=
               </Typography>
             </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2, fontSize: "0.95rem" }}>
+              Cashback will be added to your e-wallet after purchase completion
+            </Typography>
 
             <Divider sx={{ my: 2 }} />
 
             <Stack spacing={1}>
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography variant="body1">Subtotal Exclusive vat:</Typography>
-                <Typography variant="body1">{subtotal}/=</Typography>
+                <Typography variant="body1" sx={{ fontSize: "1.05rem" }}>
+                  Subtotal Exclusive vat:
+                </Typography>
+                <Typography variant="body1" sx={{ fontSize: "1.05rem" }}>
+                  {formatNumberWithCommas(subtotal)}/=
+                </Typography>
               </Box>
 
-              {/* Discount section commented out as requested */}
-              {/* <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography variant="body1">Discount:</Typography>
-                <Typography variant="body1" color="error">
-                  - {discount}/=
-                </Typography>
-              </Box> */}
-
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography variant="body1">VAT:</Typography>
-                <Typography variant="body1" color="primary">
-                  + {tax}/=
+                <Typography variant="body1" sx={{ fontSize: "1.05rem" }}>
+                  VAT:
+                </Typography>
+                <Typography variant="body1" color="primary" sx={{ fontSize: "1.05rem" }}>
+                  + {formatNumberWithCommas(tax)}/=
                 </Typography>
               </Box>
             </Stack>
@@ -882,7 +563,7 @@ export default function Cart() {
                 Total:
               </Typography>
               <Typography variant="h6" fontWeight="bold">
-                {total - totalCashback}/=
+                {formatNumberWithCommas(total)}/=
               </Typography>
             </Box>
 
@@ -896,7 +577,7 @@ export default function Cart() {
               sx={{
                 textTransform: "none",
                 py: { xs: 1.8, md: 1.5 },
-                fontSize: { xs: "1rem", md: "0.875rem" },
+                fontSize: { xs: "1.1rem", md: "1rem" },
                 bgcolor: "#00a152",
                 "&:hover": { bgcolor: "#00873e" },
               }}

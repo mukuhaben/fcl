@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState, useEffect } from "react"
 import {
   Box,
@@ -21,7 +19,6 @@ import {
   TableRow,
   Chip,
   Badge,
-  IconButton,
   useTheme,
   useMediaQuery,
   Card,
@@ -34,6 +31,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Tooltip,
+  Alert,
 } from "@mui/material"
 import {
   Person,
@@ -46,6 +45,7 @@ import {
   CheckCircle,
   Schedule,
   Delete,
+  DeleteForever,
 } from "@mui/icons-material"
 import { useNavigate } from "react-router-dom"
 
@@ -63,7 +63,10 @@ const mockOrders = [
     date: "2023-05-15",
     image: softChairsImage,
     productName: "Soft Chair",
-    totalPaid: 79.99,
+    itemCode: "SC001",
+    totalPaid: 80, // Removed decimals
+    cashbackPercent: 5,
+    cashbackAmount: 4, // Removed decimals
     status: "Completed",
   },
   {
@@ -72,7 +75,10 @@ const mockOrders = [
     date: "2023-06-02",
     image: sofaChairImage,
     productName: "Sofa Chair",
-    totalPaid: 149.99,
+    itemCode: "SC002",
+    totalPaid: 150, // Removed decimals
+    cashbackPercent: 3,
+    cashbackAmount: 5, // Removed decimals
     status: "Pending",
   },
   {
@@ -81,7 +87,10 @@ const mockOrders = [
     date: "2023-06-10",
     image: kitchenDishesImage,
     productName: "Kitchen Dishes Set",
-    totalPaid: 59.99,
+    itemCode: "KD001",
+    totalPaid: 60, // Removed decimals
+    cashbackPercent: 7,
+    cashbackAmount: 4, // Removed decimals
     status: "Completed",
   },
   {
@@ -90,7 +99,10 @@ const mockOrders = [
     date: "2023-06-18",
     image: smartWatchesImage,
     productName: "Smart Watch",
-    totalPaid: 129.99,
+    itemCode: "SW001",
+    totalPaid: 130, // Removed decimals
+    cashbackPercent: 10,
+    cashbackAmount: 13, // Removed decimals
     status: "Pending",
   },
 ]
@@ -161,8 +173,14 @@ const AccountPage = () => {
   // State for profile picture dialog
   const [profilePictureDialog, setProfilePictureDialog] = useState(false)
 
+  // State for remove profile picture confirmation dialog
+  const [removeProfileDialog, setRemoveProfileDialog] = useState(false)
+
   // State for unread messages count
   const [unreadCount, setUnreadCount] = useState(0)
+
+  // State for success message
+  const [successMessage, setSuccessMessage] = useState("")
 
   // Calculate unread messages count
   useEffect(() => {
@@ -203,16 +221,30 @@ const AccountPage = () => {
           profilePicture: e.target.result,
         })
         setProfilePictureDialog(false)
+        setSuccessMessage("Profile picture updated successfully!")
+        setTimeout(() => setSuccessMessage(""), 3000)
       }
       reader.readAsDataURL(e.target.files[0])
     }
+  }
+
+  // Handle remove profile picture
+  const handleRemoveProfilePicture = () => {
+    setUserData({
+      ...userData,
+      profilePicture: null,
+    })
+    setRemoveProfileDialog(false)
+    setSuccessMessage("Profile picture removed successfully!")
+    setTimeout(() => setSuccessMessage(""), 3000)
   }
 
   // Handle save profile
   const handleSaveProfile = () => {
     // In a real app, you would send the updated data to the server
     setEditMode(false)
-    alert("Profile updated successfully!")
+    setSuccessMessage("Profile updated successfully!")
+    setTimeout(() => setSuccessMessage(""), 3000)
   }
 
   // Handle password change
@@ -229,7 +261,8 @@ const AccountPage = () => {
       newPassword: "",
       confirmPassword: "",
     })
-    alert("Password changed successfully!")
+    setSuccessMessage("Password changed successfully!")
+    setTimeout(() => setSuccessMessage(""), 3000)
   }
 
   // Handle message read
@@ -242,6 +275,13 @@ const AccountPage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Success Message */}
+      {successMessage && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {successMessage}
+        </Alert>
+      )}
+
       <Paper elevation={1} sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, mb: 4 }}>
         <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
           <Avatar
@@ -314,7 +354,7 @@ const AccountPage = () => {
 
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
-                <Box sx={{ mb: 3, position: "relative" }}>
+                <Box sx={{ mb: 3, position: "relative", textAlign: "center" }}>
                   <Avatar
                     src={userData.profilePicture}
                     sx={{
@@ -327,21 +367,32 @@ const AccountPage = () => {
                   >
                     {!userData.profilePicture && <Person fontSize="large" />}
                   </Avatar>
+
+                  {/* Profile picture actions */}
                   {editMode && (
-                    <IconButton
-                      color="primary"
-                      aria-label="upload picture"
-                      component="span"
-                      onClick={() => setProfilePictureDialog(true)}
-                      sx={{
-                        position: "absolute",
-                        bottom: 10,
-                        right: "calc(50% - 70px)",
-                        bgcolor: "background.paper",
-                      }}
-                    >
-                      <PhotoCamera />
-                    </IconButton>
+                    <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<PhotoCamera />}
+                        onClick={() => setProfilePictureDialog(true)}
+                        size="small"
+                      >
+                        Change Photo
+                      </Button>
+
+                      {userData.profilePicture && (
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          startIcon={<DeleteForever />}
+                          onClick={() => setRemoveProfileDialog(true)}
+                          size="small"
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </Box>
                   )}
                 </Box>
 
@@ -463,7 +514,9 @@ const AccountPage = () => {
                       <TableCell>Order No.</TableCell>
                       <TableCell>Date</TableCell>
                       <TableCell>Product</TableCell>
+                      <TableCell>Item Code</TableCell>
                       <TableCell align="right">Total Paid</TableCell>
+                      <TableCell align="center">Cashback</TableCell>
                       <TableCell align="center">Status</TableCell>
                       <TableCell align="center">Actions</TableCell>
                     </TableRow>
@@ -484,7 +537,29 @@ const AccountPage = () => {
                             {order.productName}
                           </Box>
                         </TableCell>
-                        <TableCell align="right">{order.totalPaid.toFixed(2)}/=</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={order.itemCode}
+                            size="small"
+                            sx={{
+                              fontSize: "0.7rem",
+                              height: "20px",
+                              backgroundColor: "#f0f7ff",
+                              color: theme.palette.primary.main,
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell align="right">{order.totalPaid}/=</TableCell>
+                        <TableCell align="center">
+                          <Tooltip title={`${order.cashbackPercent}% cashback earned`}>
+                            <Chip
+                              label={`${order.cashbackAmount}/=`}
+                              color="success"
+                              size="small"
+                              sx={{ fontSize: "0.7rem", height: "20px" }}
+                            />
+                          </Tooltip>
+                        </TableCell>
                         <TableCell align="center">
                           <Chip
                             label={order.status}
@@ -709,6 +784,22 @@ const AccountPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setProfilePictureDialog(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Remove Profile Picture Confirmation Dialog */}
+      <Dialog open={removeProfileDialog} onClose={() => setRemoveProfileDialog(false)}>
+        <DialogTitle>Remove Profile Picture</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            Are you sure you want to remove your profile picture?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRemoveProfileDialog(false)}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleRemoveProfilePicture}>
+            Remove
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>

@@ -1,10 +1,7 @@
-"use client"
-
 import React, { useState, useEffect } from "react"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
-import { ThemeProvider, createTheme, responsiveFontSizes } from "@mui/material/styles"
+import { ThemeProvider, createTheme } from "@mui/material/styles"
 import CssBaseline from "@mui/material/CssBaseline"
-import useMediaQuery from "@mui/material/useMediaQuery"
 import IndexPage from "./pages/Home/View"
 import NavigationBar from "./components/NavigationBar"
 import Footer from "./components/Footer"
@@ -17,9 +14,6 @@ import AccountPage from "./pages/Account/View/Index"
 import WalletPage from "./pages/Wallet/View/Index"
 
 function App() {
-  // Detect preferred color scheme (light/dark mode)
-  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: light)")
-
   // State for user authentication
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
@@ -47,12 +41,12 @@ function App() {
     localStorage.removeItem("currentUser")
   }
 
-  // Create a responsive theme
-  let theme = React.useMemo(
+  // Create a theme with light mode always enabled, regardless of device preference
+  const theme = React.useMemo(
     () =>
       createTheme({
         palette: {
-          mode: prefersDarkMode ? "dark" : "light",
+          mode: "light", // Always use light mode
           primary: {
             main: "#0056B3",
           },
@@ -61,6 +55,23 @@ function App() {
           },
           success: {
             main: "#4CAF50",
+          },
+          error: {
+            main: "#E53935",
+          },
+          warning: {
+            main: "#FFA000",
+          },
+          info: {
+            main: "#2196F3",
+          },
+          background: {
+            default: "#ffffff", // Ensure white background
+            paper: "#ffffff", // Ensure white paper background
+          },
+          text: {
+            primary: "#333333", // Dark text for better readability
+            secondary: "#666666",
           },
         },
         // Add responsive breakpoints configuration
@@ -75,22 +86,50 @@ function App() {
         },
         // Add responsive spacing
         spacing: (factor) => `${0.25 * factor}rem`,
-        // Add responsive typography
+        // Increase typography sizes for better readability
         typography: {
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+          fontSize: 14, // Base font size increased
           h1: {
-            fontSize: "2.5rem",
-            "@media (min-width:600px)": {
-              fontSize: "3rem",
-            },
-            "@media (min-width:900px)": {
-              fontSize: "3.5rem",
-            },
+            fontSize: "2.7rem",
+            fontWeight: 600,
           },
-          // Add more responsive typography settings for other elements
+          h2: {
+            fontSize: "2.2rem",
+            fontWeight: 600,
+          },
+          h3: {
+            fontSize: "1.8rem",
+            fontWeight: 600,
+          },
+          h4: {
+            fontSize: "1.5rem",
+            fontWeight: 600,
+          },
+          h5: {
+            fontSize: "1.3rem",
+            fontWeight: 600,
+          },
+          h6: {
+            fontSize: "1.1rem",
+            fontWeight: 600,
+          },
+          body1: {
+            fontSize: "1rem", // Increased from default
+          },
+          body2: {
+            fontSize: "0.9rem", // Increased from default
+          },
+          button: {
+            fontSize: "0.95rem", // Increased button text
+            textTransform: "none", // No uppercase transformation
+          },
+          caption: {
+            fontSize: "0.85rem", // Increased caption size
+          },
         },
         components: {
-          // Add global component overrides for better responsiveness
+          // Global component overrides for better readability
           MuiContainer: {
             styleOverrides: {
               root: {
@@ -103,13 +142,26 @@ function App() {
               },
             },
           },
+          // Ensure Chip text is readable
+          MuiChip: {
+            styleOverrides: {
+              label: {
+                fontSize: "0.85rem", // Increased from default
+              },
+            },
+          },
+          // Ensure table text is readable
+          MuiTableCell: {
+            styleOverrides: {
+              root: {
+                fontSize: "0.95rem", // Increased from default
+              },
+            },
+          },
         },
       }),
-    [prefersDarkMode],
+    [],
   )
-
-  // Apply responsive font sizes
-  theme = responsiveFontSizes(theme)
 
   return (
     <ThemeProvider theme={theme}>

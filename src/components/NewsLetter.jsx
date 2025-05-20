@@ -1,49 +1,40 @@
-import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Paper,
-  Container,
-  Grid,
-  useTheme
-} from '@mui/material';
+import { useState } from "react"
+import { Box, Typography, TextField, Button, Paper, Container, Grid, useTheme } from "@mui/material"
 
 const NewsletterSubscription = () => {
-  const theme = useTheme();
-  const [email, setEmail] = useState('');
+  const theme = useTheme()
+  const [email, setEmail] = useState("")
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Subscribed with email:', email);
-    setEmail('');
-  };
+    e.preventDefault()
+    console.log("Subscribed with email:", email)
+    setEmail("")
+  }
 
   return (
     <Box
       sx={{
         backgroundColor: theme.palette.background.default,
         py: 8,
-        width: '100%',
+        width: "100%",
       }}
     >
       <Container maxWidth="md">
         <Paper
           elevation={0}
           sx={{
-            backgroundColor: 'transparent',
-            textAlign: 'center',
+            backgroundColor: "transparent",
+            textAlign: "center",
           }}
         >
           <Typography
             variant="h5"
             component="h2"
             sx={{
-              fontWeight: 'bold',
+              fontWeight: "bold",
               mb: 2,
-              fontSize: '1.5rem',
-              color: 'text.primary',
+              fontSize: "1.5rem",
+              color: "text.primary",
             }}
           >
             Subscribe to our newsletter
@@ -53,8 +44,8 @@ const NewsletterSubscription = () => {
             variant="body1"
             sx={{
               mb: 4,
-              color: 'text.secondary',
-              fontSize: '1rem',
+              color: "text.secondary",
+              fontSize: "1.1rem", // Increased font size
             }}
           >
             Get daily news on upcoming offers from many suppliers all over the world
@@ -72,17 +63,15 @@ const NewsletterSubscription = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor:
-                        theme.palette.mode === 'dark'
-                          ? theme.palette.background.paper
-                          : '#fff',
-                      borderRadius: '4px',
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: theme.palette.mode === "dark" ? theme.palette.background.paper : "#fff",
+                      borderRadius: "4px",
+                      fontSize: "1rem", // Increased font size
                     },
                   }}
                   InputProps={{
                     style: {
-                      height: '48px',
+                      height: "48px",
                     },
                   }}
                 />
@@ -95,10 +84,10 @@ const NewsletterSubscription = () => {
                   color="primary"
                   size="large"
                   sx={{
-                    height: '48px',
-                    textTransform: 'none',
-                    fontWeight: 'medium',
-                    fontSize: '1rem',
+                    height: "48px",
+                    textTransform: "none",
+                    fontWeight: "medium",
+                    fontSize: "1rem", // Increased font size
                   }}
                 >
                   Subscribe
@@ -109,7 +98,7 @@ const NewsletterSubscription = () => {
         </Paper>
       </Container>
     </Box>
-  );
-};
+  )
+}
 
-export default NewsletterSubscription;
+export default NewsletterSubscription

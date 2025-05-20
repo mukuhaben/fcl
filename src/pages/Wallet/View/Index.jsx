@@ -1,6 +1,4 @@
-"use client"
-
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Box,
   Container,
@@ -30,82 +28,111 @@ import {
   Tabs,
   Tab,
   Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Tooltip,
 } from "@mui/material"
 import {
   AccountBalanceWallet,
   ArrowUpward,
-  ArrowDownward,
   History,
-  Add,
-  CreditCard,
-  ShoppingBag,
-  LocalAtm,
   Close,
-  ContentCopy,
   CheckCircle,
+  LocalAtm,
+  Info,
+  Warning,
 } from "@mui/icons-material"
+import { useNavigate } from "react-router-dom"
 
-// Mock transaction data
-const mockTransactions = [
+// Mock cashback transaction data with item codes and percentages
+// Each transaction represents a purchase that earned cashback
+const mockCashbackTransactions = [
   {
     id: 1,
-    type: "deposit",
-    amount: 500,
+    itemCode: "SC001",
+    orderNo: "ORD-2023-001",
     date: "2023-06-15",
+    productName: "Soft Chair",
+    purchaseAmount: 80, // Rounded to whole number
+    cashbackPercent: 5,
+    cashbackAmount: 4, // Rounded to whole number
     status: "completed",
-    description: "Deposit via M-Pesa",
+  },
+  {
+    id: 2,
+    itemCode: "KM001",
+    orderNo: "ORD-2023-002",
+    date: "2023-06-10",
+    productName: "Kitchen Mixer",
+    purchaseAmount: 150, // Rounded to whole number
+    cashbackPercent: 15,
+    cashbackAmount: 23, // Rounded to whole number
+    status: "completed",
+  },
+  {
+    id: 3,
+    itemCode: "SW001",
+    orderNo: "ORD-2023-003",
+    date: "2023-05-28",
+    productName: "Smart Watch",
+    purchaseAmount: 100, // Rounded to whole number
+    cashbackPercent: 10,
+    cashbackAmount: 10, // Rounded to whole number
+    status: "completed",
+  },
+  {
+    id: 4,
+    itemCode: "BL001",
+    orderNo: "ORD-2023-004",
+    date: "2023-05-20",
+    productName: "Blender",
+    purchaseAmount: 35, // Rounded to whole number
+    cashbackPercent: 8,
+    cashbackAmount: 3, // Rounded to whole number
+    status: "completed",
+  },
+  {
+    id: 5,
+    itemCode: "CM001",
+    orderNo: "ORD-2023-005",
+    date: "2023-05-15",
+    productName: "Coffee Maker",
+    purchaseAmount: 50, // Rounded to whole number
+    cashbackPercent: 12,
+    cashbackAmount: 6, // Rounded to whole number
+    status: "completed",
+  },
+]
+
+// Mock withdrawal history
+// Records of when users withdrew their cashback to external payment methods
+const mockWithdrawals = [
+  {
+    id: 1,
+    type: "withdrawal",
+    amount: 30, // Rounded to whole number
+    date: "2023-06-01",
+    status: "completed",
+    method: "M-Pesa",
+    reference: "WD-2023-001",
   },
   {
     id: 2,
     type: "withdrawal",
-    amount: 200,
-    date: "2023-06-10",
+    amount: 15, // Rounded to whole number
+    date: "2023-05-10",
     status: "completed",
-    description: "Withdrawal to bank account",
-  },
-  {
-    id: 3,
-    type: "purchase",
-    amount: 79.99,
-    date: "2023-06-05",
-    status: "completed",
-    description: "Purchase: Soft Chair",
-  },
-  {
-    id: 4,
-    type: "cashback",
-    amount: 5.99,
-    date: "2023-06-05",
-    status: "completed",
-    description: "Cashback: Soft Chair purchase",
-  },
-  {
-    id: 5,
-    type: "deposit",
-    amount: 300,
-    date: "2023-05-28",
-    status: "completed",
-    description: "Deposit via Credit Card",
-  },
-  {
-    id: 6,
-    type: "purchase",
-    amount: 149.99,
-    date: "2023-05-20",
-    status: "completed",
-    description: "Purchase: Kitchen Mixer",
-  },
-  {
-    id: 7,
-    type: "cashback",
-    amount: 15,
-    date: "2023-05-20",
-    status: "completed",
-    description: "Cashback: Kitchen Mixer purchase",
+    method: "Bank Account",
+    reference: "WD-2023-002",
   },
 ]
 
 // Mock payment methods
+// Available methods for withdrawing cashback
 const mockPaymentMethods = [
   {
     id: 1,
@@ -113,13 +140,20 @@ const mockPaymentMethods = [
     name: "Visa ending in 4242",
     details: "**** **** **** 4242",
     expiryDate: "05/25",
-    isDefault: true,
+    isDefault: false,
   },
   {
     id: 2,
     type: "mobile",
     name: "M-Pesa",
     details: "+254 722 123 456",
+    isDefault: true,
+  },
+  {
+    id: 3,
+    type: "bank",
+    name: "Bank Account",
+    details: "Equity Bank ****1234",
     isDefault: false,
   },
 ]
@@ -127,96 +161,74 @@ const mockPaymentMethods = [
 const WalletPage = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+  const navigate = useNavigate()
 
-  // State for wallet balance
-  const [walletBalance, setWalletBalance] = useState(621)
-  const [cashbackBalance, setCashbackBalance] = useState(20.99)
+  // Calculate total cashback from transactions
+  // This function computes the available balance by subtracting withdrawals from earned cashback
+  const calculateTotalCashback = () => {
+    const totalEarned = mockCashbackTransactions.reduce((sum, transaction) => sum + transaction.cashbackAmount, 0)
+    const totalWithdrawn = mockWithdrawals.reduce((sum, withdrawal) => sum + withdrawal.amount, 0)
+    return totalEarned - totalWithdrawn
+  }
+
+  // State for cashback balance
+  const [cashbackBalance, setCashbackBalance] = useState(0)
+
+  // Update cashback balance on component mount
+  useEffect(() => {
+    setCashbackBalance(calculateTotalCashback())
+  }, [])
 
   // State for dialogs
-  const [depositDialog, setDepositDialog] = useState(false)
   const [withdrawDialog, setWithdrawDialog] = useState(false)
-  const [addPaymentMethodDialog, setAddPaymentMethodDialog] = useState(false)
 
   // State for transaction history tab
   const [historyTab, setHistoryTab] = useState(0)
 
-  // State for deposit/withdraw amount
+  // State for withdraw amount
   const [amount, setAmount] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("")
 
-  // State for new payment method
-  const [newPaymentMethod, setNewPaymentMethod] = useState({
-    type: "card",
-    cardNumber: "",
-    cardName: "",
-    expiryDate: "",
-    cvv: "",
-    phoneNumber: "",
-  })
-
   // State for success message
   const [successMessage, setSuccessMessage] = useState("")
-
-  // Handle deposit
-  const handleDeposit = () => {
-    if (!amount || !paymentMethod) {
-      alert("Please enter an amount and select a payment method")
-      return
-    }
-
-    // In a real app, you would process the deposit through an API
-    setWalletBalance(walletBalance + Number.parseFloat(amount))
-
-    // Add to transactions
-    const newTransaction = {
-      id: mockTransactions.length + 1,
-      type: "deposit",
-      amount: Number.parseFloat(amount),
-      date: new Date().toISOString().split("T")[0],
-      status: "completed",
-      description: `Deposit via ${paymentMethod === "1" ? "Visa ending in 4242" : "M-Pesa"}`,
-    }
-
-    // In a real app, you would update this in the server/state management
-    mockTransactions.unshift(newTransaction)
-
-    // Reset form and close dialog
-    setAmount("")
-    setPaymentMethod("")
-    setDepositDialog(false)
-
-    // Show success message
-    setSuccessMessage("Deposit successful! Your wallet has been updated.")
-    setTimeout(() => setSuccessMessage(""), 5000)
-  }
+  const [errorMessage, setErrorMessage] = useState("")
 
   // Handle withdraw
+  // This function processes a cashback withdrawal request
   const handleWithdraw = () => {
     if (!amount || !paymentMethod) {
-      alert("Please enter an amount and select a payment method")
+      setErrorMessage("Please enter an amount and select a payment method")
       return
     }
 
-    if (Number.parseFloat(amount) > walletBalance) {
-      alert("Insufficient balance")
+    const withdrawAmount = Number.parseFloat(amount)
+
+    if (withdrawAmount < 100) {
+      setErrorMessage("Minimum withdrawal amount is KSH 100")
+      return
+    }
+
+    if (withdrawAmount > cashbackBalance) {
+      setErrorMessage("Insufficient balance")
       return
     }
 
     // In a real app, you would process the withdrawal through an API
-    setWalletBalance(walletBalance - Number.parseFloat(amount))
+    setCashbackBalance(cashbackBalance - withdrawAmount)
 
-    // Add to transactions
-    const newTransaction = {
-      id: mockTransactions.length + 1,
+    // Add to withdrawals
+    const newWithdrawal = {
+      id: mockWithdrawals.length + 1,
       type: "withdrawal",
-      amount: Number.parseFloat(amount),
+      amount: Math.round(withdrawAmount), // Round to whole number
       date: new Date().toISOString().split("T")[0],
       status: "completed",
-      description: `Withdrawal to ${paymentMethod === "1" ? "Visa ending in 4242" : "M-Pesa"}`,
+      method: paymentMethod === "1" ? "Visa ending in 4242" : paymentMethod === "2" ? "M-Pesa" : "Bank Account",
+      reference: `WD-2023-${mockWithdrawals.length + 1}`,
     }
 
     // In a real app, you would update this in the server/state management
-    mockTransactions.unshift(newTransaction)
+    mockWithdrawals.unshift(newWithdrawal)
 
     // Reset form and close dialog
     setAmount("")
@@ -224,45 +236,7 @@ const WalletPage = () => {
     setWithdrawDialog(false)
 
     // Show success message
-    setSuccessMessage("Withdrawal successful! Your wallet has been updated.")
-    setTimeout(() => setSuccessMessage(""), 5000)
-  }
-
-  // Handle add payment method
-  const handleAddPaymentMethod = () => {
-    // Validate form
-    if (newPaymentMethod.type === "card") {
-      if (
-        !newPaymentMethod.cardNumber ||
-        !newPaymentMethod.cardName ||
-        !newPaymentMethod.expiryDate ||
-        !newPaymentMethod.cvv
-      ) {
-        alert("Please fill in all card details")
-        return
-      }
-    } else if (newPaymentMethod.type === "mobile") {
-      if (!newPaymentMethod.phoneNumber) {
-        alert("Please enter your phone number")
-        return
-      }
-    }
-
-    // In a real app, you would process the new payment method through an API
-
-    // Reset form and close dialog
-    setNewPaymentMethod({
-      type: "card",
-      cardNumber: "",
-      cardName: "",
-      expiryDate: "",
-      cvv: "",
-      phoneNumber: "",
-    })
-    setAddPaymentMethodDialog(false)
-
-    // Show success message
-    setSuccessMessage("Payment method added successfully!")
+    setSuccessMessage("Withdrawal successful! Your cashback has been sent to your selected payment method.")
     setTimeout(() => setSuccessMessage(""), 5000)
   }
 
@@ -271,13 +245,10 @@ const WalletPage = () => {
     setHistoryTab(newValue)
   }
 
-  // Filter transactions based on selected tab
-  const filteredTransactions =
-    historyTab === 0
-      ? mockTransactions
-      : historyTab === 1
-        ? mockTransactions.filter((t) => t.type === "deposit" || t.type === "cashback")
-        : mockTransactions.filter((t) => t.type === "withdrawal" || t.type === "purchase")
+  // Clear error message
+  const clearErrorMessage = () => {
+    setErrorMessage("")
+  }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -296,8 +267,23 @@ const WalletPage = () => {
         </Alert>
       )}
 
+      {/* Error Message */}
+      {errorMessage && (
+        <Alert
+          severity="error"
+          sx={{ mb: 3 }}
+          action={
+            <IconButton aria-label="close" color="inherit" size="small" onClick={clearErrorMessage}>
+              <Close fontSize="inherit" />
+            </IconButton>
+          }
+        >
+          {errorMessage}
+        </Alert>
+      )}
+
       <Grid container spacing={3}>
-        {/* Wallet Balance Section */}
+        {/* E-Wallet Balance Section */}
         <Grid item xs={12} md={8}>
           <Paper
             elevation={1}
@@ -318,12 +304,12 @@ const WalletPage = () => {
                   </Typography>
                 </Box>
                 <Typography variant="h3" component="p" sx={{ mb: 1, fontWeight: "bold" }}>
-                  {walletBalance.toFixed(2)}/=
+                  {Math.round(cashbackBalance)}/= {/* Rounded to whole number */}
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
                   <Chip
                     icon={<CheckCircle sx={{ color: "white !important" }} />}
-                    label="Available for purchases"
+                    label="Available for withdrawal"
                     sx={{
                       bgcolor: "rgba(255, 255, 255, 0.2)",
                       color: "white",
@@ -336,61 +322,40 @@ const WalletPage = () => {
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <Button
                     variant="contained"
-                    startIcon={<Add />}
-                    onClick={() => setDepositDialog(true)}
+                    startIcon={<ArrowUpward />}
+                    onClick={() => setWithdrawDialog(true)}
+                    disabled={cashbackBalance < 100}
                     sx={{
                       bgcolor: "rgba(255, 255, 255, 0.9)",
                       color: theme.palette.primary.main,
                       "&:hover": {
                         bgcolor: "white",
                       },
-                    }}
-                  >
-                    Add Money
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<ArrowUpward />}
-                    onClick={() => setWithdrawDialog(true)}
-                    sx={{
-                      borderColor: "white",
-                      color: "white",
-                      "&:hover": {
-                        borderColor: "white",
-                        bgcolor: "rgba(255, 255, 255, 0.1)",
+                      "&.Mui-disabled": {
+                        bgcolor: "rgba(255, 255, 255, 0.5)",
+                        color: "rgba(0, 0, 0, 0.4)",
                       },
                     }}
                   >
-                    Withdraw
+                    Withdraw Cashback
                   </Button>
+                  {cashbackBalance < 100 && (
+                    <Typography variant="caption" sx={{ color: "white", textAlign: "center" }}>
+                      Minimum withdrawal: KSH 100/=
+                    </Typography>
+                  )}
                 </Box>
               </Grid>
             </Grid>
-          </Paper>
-
-          {/* Cashback Balance */}
-          <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-              <Typography variant="h6" component="h2">
-                Cashback Balance
-              </Typography>
-              <Chip icon={<LocalAtm />} label="Earned from purchases" color="success" variant="outlined" size="small" />
-            </Box>
-            <Typography variant="h4" component="p" color="success.main" sx={{ fontWeight: "bold" }}>
-              {cashbackBalance.toFixed(2)}/=
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Cashback earned from your purchases. This amount will be automatically applied to your next purchase.
-            </Typography>
           </Paper>
 
           {/* Transaction History */}
           <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
               <Typography variant="h6" component="h2">
-                Transaction History
+                Cashback History
               </Typography>
-              <Chip icon={<History />} label="Last 30 days" color="primary" variant="outlined" size="small" />
+              <Chip icon={<History />} label="All transactions" color="primary" variant="outlined" size="small" />
             </Box>
 
             <Tabs
@@ -398,117 +363,194 @@ const WalletPage = () => {
               onChange={handleHistoryTabChange}
               sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
             >
-              <Tab label="All Transactions" />
-              <Tab label="Money In" />
-              <Tab label="Money Out" />
+              <Tab label="Cashback Earned" />
+              <Tab label="Withdrawals" />
             </Tabs>
 
-            <List sx={{ width: "100%" }}>
-              {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((transaction) => (
-                  <React.Fragment key={transaction.id}>
-                    <ListItem
-                      alignItems="flex-start"
-                      secondaryAction={
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            fontWeight: "bold",
-                            color:
-                              transaction.type === "deposit" || transaction.type === "cashback"
-                                ? "success.main"
-                                : "error.main",
-                          }}
-                        >
-                          {transaction.type === "deposit" || transaction.type === "cashback" ? "+" : "-"}
-                          {transaction.amount.toFixed(2)}/=
-                        </Typography>
-                      }
-                    >
-                      <ListItemIcon>
-                        {transaction.type === "deposit" && <ArrowDownward color="success" />}
-                        {transaction.type === "withdrawal" && <ArrowUpward color="error" />}
-                        {transaction.type === "purchase" && <ShoppingBag color="error" />}
-                        {transaction.type === "cashback" && <LocalAtm color="success" />}
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={transaction.description}
-                        secondary={
-                          <React.Fragment>
-                            <Typography component="span" variant="body2" color="text.primary">
-                              {transaction.date}
-                            </Typography>
-                            {" — "}
-                            <Chip
-                              label={transaction.status}
-                              size="small"
-                              color={transaction.status === "completed" ? "success" : "warning"}
-                              sx={{ height: 20, fontSize: "0.7rem" }}
-                            />
-                          </React.Fragment>
-                        }
-                      />
-                    </ListItem>
-                    <Divider variant="inset" component="li" />
-                  </React.Fragment>
-                ))
-              ) : (
-                <Box sx={{ textAlign: "center", py: 4 }}>
-                  <History sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    No Transactions Yet
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Your transaction history will appear here once you start using your wallet.
-                  </Typography>
-                </Box>
-              )}
-            </List>
+            {historyTab === 0 ? (
+              <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
+                <Table size={isMobile ? "small" : "medium"}>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: theme.palette.action.hover }}>
+                      <TableCell>Date</TableCell>
+                      <TableCell>Order No.</TableCell>
+                      <TableCell>Item Code</TableCell>
+                      <TableCell>Product</TableCell>
+                      <TableCell align="right">Purchase Amount</TableCell>
+                      <TableCell align="center">Cashback %</TableCell>
+                      <TableCell align="right">Cashback Earned</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {mockCashbackTransactions.map((transaction) => (
+                      <TableRow key={transaction.id} hover>
+                        <TableCell>{transaction.date}</TableCell>
+                        <TableCell>{transaction.orderNo}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={transaction.itemCode}
+                            size="small"
+                            sx={{
+                              fontSize: "0.7rem",
+                              height: "20px",
+                              backgroundColor: "#f0f7ff",
+                              color: theme.palette.primary.main,
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>{transaction.productName}</TableCell>
+                        <TableCell align="right">{transaction.purchaseAmount}/=</TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={`${transaction.cashbackPercent}%`}
+                            size="small"
+                            color="error"
+                            sx={{ fontSize: "0.7rem", height: "20px" }}
+                          />
+                        </TableCell>
+                        <TableCell align="right" sx={{ fontWeight: "bold", color: "success.main" }}>
+                          {transaction.cashbackAmount}/=
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow sx={{ backgroundColor: "rgba(76, 175, 80, 0.08)" }}>
+                      <TableCell colSpan={6} align="right" sx={{ fontWeight: "bold" }}>
+                        Total Cashback Earned:
+                      </TableCell>
+                      <TableCell align="right" sx={{ fontWeight: "bold", color: "success.main" }}>
+                        {mockCashbackTransactions.reduce((sum, transaction) => sum + transaction.cashbackAmount, 0)}/=
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
+                <Table size={isMobile ? "small" : "medium"}>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: theme.palette.action.hover }}>
+                      <TableCell>Date</TableCell>
+                      <TableCell>Reference</TableCell>
+                      <TableCell>Method</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell align="right">Amount</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {mockWithdrawals.length > 0 ? (
+                      <>
+                        {mockWithdrawals.map((withdrawal) => (
+                          <TableRow key={withdrawal.id} hover>
+                            <TableCell>{withdrawal.date}</TableCell>
+                            <TableCell>{withdrawal.reference}</TableCell>
+                            <TableCell>{withdrawal.method}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={withdrawal.status}
+                                size="small"
+                                color={withdrawal.status === "completed" ? "success" : "warning"}
+                                sx={{ fontSize: "0.7rem", height: "20px" }}
+                              />
+                            </TableCell>
+                            <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                              {withdrawal.amount}/=
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow sx={{ backgroundColor: "rgba(76, 175, 80, 0.08)" }}>
+                          <TableCell colSpan={4} align="right" sx={{ fontWeight: "bold" }}>
+                            Total Withdrawn:
+                          </TableCell>
+                          <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                            {mockWithdrawals.reduce((sum, withdrawal) => sum + withdrawal.amount, 0)}/=
+                          </TableCell>
+                        </TableRow>
+                      </>
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                          <Typography variant="body1" color="text.secondary">
+                            No withdrawals yet
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+
+            {/* Mobile view for transaction history */}
+            {isMobile && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Swipe horizontally to view all transaction details
+                </Typography>
+              </Box>
+            )}
+
+            <Alert severity="info" sx={{ mt: 2 }}>
+              <Typography variant="body2">
+                <strong>Cashback Policy:</strong> Cashback is earned on all eligible purchases and can be withdrawn once
+                you have accumulated a minimum of KSH 100/=.
+              </Typography>
+            </Alert>
           </Paper>
         </Grid>
 
         {/* Right Sidebar */}
         <Grid item xs={12} md={4}>
-          {/* Quick Actions */}
+          {/* Withdrawal Information */}
           <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
             <Typography variant="h6" component="h2" gutterBottom>
-              Quick Actions
+              Withdrawal Information
             </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  startIcon={<Add />}
-                  onClick={() => setDepositDialog(true)}
-                  sx={{ textTransform: "none", py: 1.5 }}
-                >
-                  Add Money
-                </Button>
-              </Grid>
-              <Grid item xs={6}>
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  startIcon={<ArrowUpward />}
-                  onClick={() => setWithdrawDialog(true)}
-                  sx={{ textTransform: "none", py: 1.5 }}
-                >
-                  Withdraw
-                </Button>
-              </Grid>
-            </Grid>
+
+            <Alert severity="warning" sx={{ mb: 3 }}>
+              <Typography variant="body2" fontWeight="bold">
+                Minimum withdrawal amount: KSH 100/=
+              </Typography>
+            </Alert>
+
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body1" fontWeight="bold" gutterBottom>
+                Available for Withdrawal
+              </Typography>
+              <Typography variant="h5" color="success.main">
+                {Math.round(cashbackBalance)}/= {/* Rounded to whole number */}
+              </Typography>
+              {cashbackBalance < 100 && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  You need {Math.round(100 - cashbackBalance)}/= more to reach the minimum withdrawal amount.
+                </Typography>
+              )}
+            </Box>
+
+            <Button
+              variant="contained"
+              fullWidth
+              startIcon={<ArrowUpward />}
+              onClick={() => setWithdrawDialog(true)}
+              disabled={cashbackBalance < 100}
+              sx={{ mb: 2 }}
+            >
+              Withdraw Cashback
+            </Button>
+
+           
           </Paper>
 
-          {/* Payment Methods */}
+       {/*  {/* Payment Methods *
           <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
               <Typography variant="h6" component="h2">
-                Payment Methods
+                Withdrawal Methods
               </Typography>
-              <Button size="small" startIcon={<Add />} onClick={() => setAddPaymentMethodDialog(true)}>
-                Add New
-              </Button>
+              <Tooltip title="You can withdraw your cashback to any of these payment methods">
+                <IconButton size="small">
+                  <Info fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
 
             <List sx={{ width: "100%" }}>
@@ -522,116 +564,72 @@ const WalletPage = () => {
                       )
                     }
                   >
-                    <ListItemIcon>{method.type === "card" ? <CreditCard /> : <LocalAtm />}</ListItemIcon>
+                   <ListItemIcon>
+                      {method.type === "card" ? <LocalAtm /> : method.type === "mobile" ? <LocalAtm /> : <LocalAtm />}
+                    </ListItemIcon>
                     <ListItemText primary={method.name} secondary={method.details} />
                   </ListItem>
                   <Divider variant="inset" component="li" />
-                </React.Fragment>
-              ))}
+                </React.Fragment> 
+              ))}  
             </List>
-          </Paper>
 
-          {/* Wallet Information */}
+           <Button
+              variant="outlined"
+              fullWidth
+              onClick={() => navigate("/account")}
+              sx={{ mt: 2, textTransform: "none" }}
+            >
+              Manage Payment Methods
+            </Button>  
+          </Paper>   */}
+
+          {/* Cashback Information */}
           <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
             <Typography variant="h6" component="h2" gutterBottom>
-              Wallet Information
+              About Cashback
             </Typography>
 
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Wallet ID
-              </Typography>
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Typography variant="body1" sx={{ mr: 1 }}>
-                  FCL-W-12345678
+            <Typography variant="body2" paragraph>
+              <strong>How Cashback Works:</strong>
+            </Typography>
+
+            <List sx={{ pl: 2 }}>
+              <ListItem sx={{ display: "list-item", p: 0, mb: 1 }}>
+                <Typography variant="body2">
+                  Earn cashback on every eligible purchase based on the product's cashback percentage.
                 </Typography>
-                <IconButton size="small">
-                  <ContentCopy fontSize="small" />
-                </IconButton>
-              </Box>
-            </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Typography variant="body2" gutterBottom>
-              About E-Wallet
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Your FirstCraft E-Wallet allows you to store funds for easy shopping, earn cashback on purchases, and
-              manage your payment methods securely.
-            </Typography>
+              </ListItem>
+              <ListItem sx={{ display: "list-item", p: 0, mb: 1 }}>
+                <Typography variant="body2">
+                  Cashback is calculated on the product price and added to your balance after purchase.
+                </Typography>
+              </ListItem>
+              <ListItem sx={{ display: "list-item", p: 0, mb: 1 }}>
+                <Typography variant="body2">
+                  Withdraw your cashback once you've accumulated a minimum of KSH 100/=.
+                </Typography>
+              </ListItem>
+              <ListItem sx={{ display: "list-item", p: 0 }}>
+                <Typography variant="body2">
+                  Choose your preferred withdrawal method: M-Pesa.
+                </Typography>
+              </ListItem>
+            </List>
 
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
-                Need help with your wallet? Contact our support team at support@firstcraft.com
+                Need help with your cashback? Contact our support team at support@firstcraft.com
               </Typography>
             </Alert>
           </Paper>
         </Grid>
       </Grid>
 
-      {/* Deposit Dialog */}
-      <Dialog open={depositDialog} onClose={() => setDepositDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          Add Money to Wallet
-          <IconButton
-            aria-label="close"
-            onClick={() => setDepositDialog(false)}
-            sx={{
-              position: "absolute",
-              right: 8,
-              top: 8,
-            }}
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            Add money to your wallet using one of your saved payment methods.
-          </Typography>
-
-          <TextField
-            label="Amount"
-            type="number"
-            fullWidth
-            margin="normal"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            InputProps={{
-              startAdornment: <InputAdornment position="start">KES</InputAdornment>,
-            }}
-          />
-
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Payment Method</InputLabel>
-            <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} label="Payment Method">
-              {mockPaymentMethods.map((method) => (
-                <MenuItem key={method.id} value={method.id}>
-                  {method.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <Alert severity="info" sx={{ mt: 2 }}>
-            <Typography variant="body2">
-              Funds will be available in your wallet immediately after successful payment.
-            </Typography>
-          </Alert>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDepositDialog(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleDeposit} disabled={!amount || !paymentMethod}>
-            Add Money
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       {/* Withdraw Dialog */}
       <Dialog open={withdrawDialog} onClose={() => setWithdrawDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
-          Withdraw Money
+          Withdraw Cashback
           <IconButton
             aria-label="close"
             onClick={() => setWithdrawDialog(false)}
@@ -646,15 +644,15 @@ const WalletPage = () => {
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" paragraph>
-            Withdraw money from your wallet to one of your saved payment methods.
+            Withdraw your cashback to one of your saved payment methods.
           </Typography>
 
           <Box sx={{ mb: 2 }}>
             <Typography variant="body2" gutterBottom>
               Available Balance
             </Typography>
-            <Typography variant="h6" color="primary">
-              {walletBalance.toFixed(2)}/=
+            <Typography variant="h6" color="success.main">
+              {Math.round(cashbackBalance)}/= {/* Rounded to whole number */}
             </Typography>
           </Box>
 
@@ -668,8 +666,17 @@ const WalletPage = () => {
             InputProps={{
               startAdornment: <InputAdornment position="start">KES</InputAdornment>,
             }}
-            error={Number.parseFloat(amount) > walletBalance}
-            helperText={Number.parseFloat(amount) > walletBalance ? "Amount exceeds available balance" : ""}
+            error={
+              Number.parseFloat(amount) > cashbackBalance ||
+              (Number.parseFloat(amount) > 0 && Number.parseFloat(amount) < 100)
+            }
+            helperText={
+              Number.parseFloat(amount) > cashbackBalance
+                ? "Amount exceeds available balance"
+                : Number.parseFloat(amount) > 0 && Number.parseFloat(amount) < 100
+                  ? "Minimum withdrawal amount is KSH 100/="
+                  : ""
+            }
           />
 
           <FormControl fullWidth margin="normal">
@@ -684,9 +691,12 @@ const WalletPage = () => {
           </FormControl>
 
           <Alert severity="warning" sx={{ mt: 2 }}>
-            <Typography variant="body2">
-              Withdrawal processing time depends on your bank or mobile money provider. It may take 1-3 business days.
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+              <Warning sx={{ mr: 1, mt: 0.5 }} fontSize="small" />
+              <Typography variant="body2">
+                <strong>Important:</strong> Minimum withdrawal amount is KSH 100/=. M-Pesa withdrawals are typically processed instantly.
+              </Typography>
+            </Box>
           </Alert>
         </DialogContent>
         <DialogActions>
@@ -694,104 +704,14 @@ const WalletPage = () => {
           <Button
             variant="contained"
             onClick={handleWithdraw}
-            disabled={!amount || !paymentMethod || Number.parseFloat(amount) > walletBalance}
+            disabled={
+              !amount ||
+              !paymentMethod ||
+              Number.parseFloat(amount) > cashbackBalance ||
+              Number.parseFloat(amount) < 100
+            }
           >
             Withdraw
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Add Payment Method Dialog */}
-      <Dialog open={addPaymentMethodDialog} onClose={() => setAddPaymentMethodDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          Add Payment Method
-          <IconButton
-            aria-label="close"
-            onClick={() => setAddPaymentMethodDialog(false)}
-            sx={{
-              position: "absolute",
-              right: 8,
-              top: 8,
-            }}
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Payment Method Type</InputLabel>
-            <Select
-              value={newPaymentMethod.type}
-              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, type: e.target.value })}
-              label="Payment Method Type"
-            >
-              <MenuItem value="card">Credit/Debit Card</MenuItem>
-              <MenuItem value="mobile">Mobile Money</MenuItem>
-            </Select>
-          </FormControl>
-
-          {newPaymentMethod.type === "card" ? (
-            <>
-              <TextField
-                label="Card Number"
-                fullWidth
-                margin="normal"
-                value={newPaymentMethod.cardNumber}
-                onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, cardNumber: e.target.value })}
-                placeholder="1234 5678 9012 3456"
-              />
-
-              <TextField
-                label="Cardholder Name"
-                fullWidth
-                margin="normal"
-                value={newPaymentMethod.cardName}
-                onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, cardName: e.target.value })}
-              />
-
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <TextField
-                    label="Expiry Date"
-                    fullWidth
-                    margin="normal"
-                    value={newPaymentMethod.expiryDate}
-                    onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, expiryDate: e.target.value })}
-                    placeholder="MM/YY"
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    label="CVV"
-                    fullWidth
-                    margin="normal"
-                    value={newPaymentMethod.cvv}
-                    onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, cvv: e.target.value })}
-                    placeholder="123"
-                  />
-                </Grid>
-              </Grid>
-            </>
-          ) : (
-            <TextField
-              label="Phone Number"
-              fullWidth
-              margin="normal"
-              value={newPaymentMethod.phoneNumber}
-              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, phoneNumber: e.target.value })}
-              placeholder="+254 722 123 456"
-              helperText="Enter your M-Pesa registered phone number"
-            />
-          )}
-
-          <Alert severity="info" sx={{ mt: 2 }}>
-            <Typography variant="body2">Your payment information is securely stored and encrypted.</Typography>
-          </Alert>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAddPaymentMethodDialog(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleAddPaymentMethod}>
-            Add Payment Method
           </Button>
         </DialogActions>
       </Dialog>

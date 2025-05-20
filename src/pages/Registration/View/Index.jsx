@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import {
   Box,
@@ -17,8 +15,16 @@ import {
   Grid,
   InputAdornment,
   FormLabel,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Snackbar,
 } from "@mui/material"
 import { useNavigate } from "react-router-dom"
+import { Email, Check } from "@mui/icons-material"
 
 const RegistrationForm = () => {
   const navigate = useNavigate()
@@ -40,11 +46,21 @@ const RegistrationForm = () => {
     areaName: "Westlands (KE)",
     city: "",
     country: "Kenya",
-    userType: "Company", // 'Company' or 'Individual'
+    userType: "Individual", // Changed default to 'Individual' instead of 'Company'
   })
 
   // Errors state
   const [errors, setErrors] = useState({})
+
+  // Success dialog state
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false)
+
+  // Snackbar state for notifications
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  })
 
   // Handle form field changes
   const handleChange = (e) => {
@@ -69,7 +85,10 @@ const RegistrationForm = () => {
 
     // Basic validation
     const newErrors = {}
-    if (!formData.companyName) newErrors.companyName = "Company/Individual name is required"
+    if (!formData.companyName) {
+      newErrors.companyName =
+        formData.userType === "Individual" ? "Individual name is required" : "Company name is required"
+    }
     if (!formData.email) newErrors.email = "Email is required"
     if (!formData.phoneNumber) newErrors.phoneNumber = "Phone number is required"
 
@@ -78,9 +97,36 @@ const RegistrationForm = () => {
       return
     }
 
-    // Submit form data
+    // Show success dialog
+    setSuccessDialogOpen(true)
+
+    // In a real app, you would submit the form data to your backend here
     console.log("Form submitted:", formData)
-    alert("Registration successful!")
+  }
+
+  // Handle dialog close and redirect
+  const handleDialogClose = () => {
+    setSuccessDialogOpen(false)
+
+    // Show snackbar notification
+    setSnackbar({
+      open: true,
+      message: "Registration successful! Check your email for login instructions.",
+      severity: "success",
+    })
+
+    // In a real app, you would redirect to login page after a short delay
+    setTimeout(() => {
+      navigate("/login")
+    }, 2000)
+  }
+
+  // Handle snackbar close
+  const handleSnackbarClose = () => {
+    setSnackbar({
+      ...snackbar,
+      open: false,
+    })
   }
 
   return (
@@ -114,8 +160,8 @@ const RegistrationForm = () => {
               </FormControl>
             )}
           </Box>
-          
-           {/* User Type */}
+
+          {/* User Type */}
           <Box mb={3}>
             <Typography variant="body1" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
               Type of User
@@ -131,7 +177,7 @@ const RegistrationForm = () => {
           {/* Account Information */}
           <Box mb={3}>
             <Typography variant="body1" fontWeight="bold" gutterBottom>
-              Company/Individual Name{" "}
+              {formData.userType === "Individual" ? "Individual Name" : "Company Name"}{" "}
               <Typography component="span" color="error" variant="body2">
                 (Please note: Your invoice will be generated in this name)
               </Typography>
@@ -141,7 +187,7 @@ const RegistrationForm = () => {
               name="companyName"
               value={formData.companyName}
               onChange={handleChange}
-              placeholder="Company/Individual Name"
+              placeholder={formData.userType === "Individual" ? "Individual Name" : "Company Name"}
               size="small"
               error={!!errors.companyName}
               helperText={errors.companyName}
@@ -223,7 +269,7 @@ const RegistrationForm = () => {
             />
 
             <Typography variant="body1" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
-              Company/Individual KRA Pin{" "}
+              {formData.userType === "Individual" ? "Individual" : "Company"} KRA Pin{" "}
               <Typography component="span" color="error" variant="body2">
                 (Fill this field to claim VAT)
               </Typography>
@@ -305,8 +351,8 @@ const RegistrationForm = () => {
               <Select name="areaName" value={formData.areaName} onChange={handleChange}>
                 <MenuItem value="Westlands (KE)">Westlands (KE)</MenuItem>
                 <MenuItem value="Nairobi CBD">Parklands</MenuItem>
-                <MenuItem value="Kilimani">...</MenuItem>
-                <MenuItem value="Lavington">...</MenuItem>
+                <MenuItem value="Kilimani"></MenuItem>
+                <MenuItem value="Lavington"></MenuItem>
               </Select>
             </FormControl>
 
@@ -338,7 +384,13 @@ const RegistrationForm = () => {
             />
           </Box>
 
-         
+          {/* Information Alert */}
+          <Alert severity="info" sx={{ mt: 3, mb: 3 }}>
+            <Typography variant="body2">
+              Upon registration, a confirmation email will be sent to your email address with login instructions. Your
+              temporary password will be "0000" which you'll be prompted to change on first login.
+            </Typography>
+          </Alert>
 
           {/* Form Actions */}
           <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
@@ -351,6 +403,36 @@ const RegistrationForm = () => {
           </Box>
         </form>
       </Paper>
+
+      {/* Success Dialog */}
+      <Dialog open={successDialogOpen} onClose={handleDialogClose} aria-labelledby="registration-success-dialog">
+        <DialogTitle id="registration-success-dialog">
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Check color="success" />
+            Registration Successful
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Thank you for registering with FirstCraft! Your account has been created successfully.
+          </DialogContentText>
+          <Box sx={{ display: "flex", alignItems: "center", mt: 2, p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
+            <Email sx={{ mr: 2, color: "primary.main" }} />
+            <DialogContentText>
+              A confirmation email has been sent to <strong>{formData.email}</strong> with your login details. Your
+              temporary password is <strong>0000</strong>. You will be prompted to change it on your first login.
+            </DialogContentText>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose} color="primary" variant="contained" autoFocus>
+            Go to Login
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleSnackbarClose} message={snackbar.message} />
     </Container>
   )
 }

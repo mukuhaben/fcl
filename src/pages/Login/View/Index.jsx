@@ -1,7 +1,5 @@
-"use client"
-
 import { useState } from "react"
-import { Button, TextField, Typography, Paper, Container, Alert } from "@mui/material"
+import { Button, TextField, Typography, Paper, Container, Alert, Box } from "@mui/material"
 import { useNavigate } from "react-router-dom"
 
 export default function LoginPage({ onLogin }) {
@@ -9,6 +7,7 @@ export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [successMessage, setSuccessMessage] = useState("")
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -19,14 +18,17 @@ export default function LoginPage({ onLogin }) {
       return
     }
 
-    // Mock login - in a real app, you would call an API
-    if (email === "user@example.com" && password === "password") {
+    // For demo purposes, allow any email with password "0000"
+    if (password === "0000") {
       // Create mock user data
       const userData = {
-        username: "John Doe",
+        username: email.split("@")[0], // Use part before @ as username
         email: email,
         id: "12345",
       }
+
+      // Show success message
+      setSuccessMessage("Login successful! Redirecting to your account...")
 
       // Store in localStorage
       localStorage.setItem("currentUser", JSON.stringify(userData))
@@ -36,10 +38,12 @@ export default function LoginPage({ onLogin }) {
         onLogin(userData)
       }
 
-      // Navigate to home page
-      navigate("/")
+      // Navigate to account page after a short delay
+      setTimeout(() => {
+        navigate("/account")
+      }, 1500)
     } else {
-      setError("Invalid email or password")
+      setError("Invalid password. For demo, use '0000' as the password.")
     }
   }
 
@@ -53,6 +57,12 @@ export default function LoginPage({ onLogin }) {
         {error && (
           <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
             {error}
+          </Alert>
+        )}
+
+        {successMessage && (
+          <Alert severity="success" sx={{ width: "100%", mb: 2 }}>
+            {successMessage}
           </Alert>
         )}
 
@@ -76,9 +86,11 @@ export default function LoginPage({ onLogin }) {
             required
           />
 
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-            For demo purposes, use: user@example.com / password
-          </Typography>
+          <Box sx={{ mt: 2, mb: 2, p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              <strong>Demo Instructions:</strong> Enter any email address and use password "0000" to sign in.
+            </Typography>
+          </Box>
 
           <Button type="submit" fullWidth variant="contained" color="primary" sx={{ marginTop: 2, py: 1.5 }}>
             Sign In

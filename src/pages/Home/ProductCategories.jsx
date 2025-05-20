@@ -1,4 +1,4 @@
-"use client"
+
 import { useState } from "react"
 import { Box, Card, Typography, CardMedia, Button, Snackbar, Alert, useTheme } from "@mui/material"
 import { Swiper, SwiperSlide } from "swiper/react"
@@ -14,6 +14,11 @@ import kitchenMixerImage from "../../assets/images/9.png"
 import blendersImage from "../../assets/images/12.png"
 import homeApplianceImage from "../../assets/images/10.png"
 import coffeeMakerImage from "../../assets/images/13.png"
+
+// Helper function to format numbers with commas
+const formatNumberWithCommas = (number) => {
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
 
 const categories = [
   { id: 1, name: "Soft chairs", price: 1900000, cashback: 5, image: softChairsImage, itemCode: "SC001" },
@@ -95,7 +100,7 @@ const ProductCategories = ({ header }) => {
           borderRadius: 1,
           px: 1.5,
           py: 0.5,
-          fontSize: 12,
+          fontSize: "0.9rem", // Increased font size from 12px
           fontWeight: 700,
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
           zIndex: 1,
@@ -128,25 +133,25 @@ const ProductCategories = ({ header }) => {
         />
       </Box>
 
-      {/* Item code - Smaller font */}
-      <Typography variant="body2" color="text.secondary" fontWeight="bold" sx={{ fontSize: "0.65rem" }}>
+      {/* Item code - Increased font size */}
+      <Typography variant="body2" color="text.secondary" fontWeight="bold" sx={{ fontSize: "0.85rem" }}>
         Item code: {category.itemCode}
       </Typography>
 
-      {/* Item description - Smaller font */}
+      {/* Item description - Increased font size */}
       <Typography
         variant="body2"
         sx={{
           fontWeight: 500,
           my: 1,
-          fontSize: "0.75rem",
+          fontSize: "0.95rem", // Increased from 0.75rem
           lineHeight: 1.3,
         }}
       >
         {category.name} - This is a sample product description.
       </Typography>
 
-      {/* Pricing section - Cleaner layout with smaller fonts */}
+      {/* Pricing section - Cleaner layout with increased font sizes */}
       <Box
         sx={{
           display: "flex",
@@ -185,7 +190,7 @@ const ProductCategories = ({ header }) => {
               >
                 <Typography
                   sx={{
-                    fontSize: "0.6rem",
+                    fontSize: "0.8rem", // Increased from 0.6rem
                     fontWeight: 600,
                     lineHeight: 1.2,
                     whiteSpace: "nowrap",
@@ -195,12 +200,12 @@ const ProductCategories = ({ header }) => {
                 </Typography>
                 <Typography
                   sx={{
-                    fontSize: "0.6rem",
+                    fontSize: "0.8rem", // Increased from 0.6rem
                     lineHeight: 1.2,
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {tier.price.toFixed(0)}/=
+                  {formatNumberWithCommas(tier.price.toFixed(0))}/=
                 </Typography>
               </Box>
             ))}
@@ -216,8 +221,8 @@ const ProductCategories = ({ header }) => {
         sx={{
           backgroundColor: theme.palette.primary.main,
           color: "white",
-          fontSize: "0.7rem",
-          py: 0.5,
+          fontSize: "0.9rem", // Increased from 0.7rem
+          py: 0.8, // Increased padding
           mt: 1,
           textTransform: "none",
           "&:hover": {
@@ -232,7 +237,15 @@ const ProductCategories = ({ header }) => {
 
   return (
     <Box sx={{ px: { xs: 2, sm: 4, md: 6 }, py: 2 }}>
-      <Typography variant="h5" gutterBottom sx={{ mb: 2, fontSize: { xs: "1.2rem", sm: "1.5rem" } }}>
+      <Typography
+        variant="h5"
+        gutterBottom
+        sx={{
+          mb: 2,
+          fontSize: { xs: "1.4rem", sm: "1.6rem" }, // Increased from 1.2rem/1.5rem
+          fontWeight: "bold",
+        }}
+      >
         {header}
       </Typography>
       <Swiper
