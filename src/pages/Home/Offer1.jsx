@@ -1,3 +1,4 @@
+{/*
 import { useState, useEffect } from "react"
 import { Box, Typography, Grid, Paper, Stack, Card, CardMedia, CardContent } from "@mui/material"
 
@@ -129,7 +130,7 @@ const DealsAndOffers = () => {
         position: "relative", // Added for absolute positioning of cashback badge
       }}
     >
-      {/* Cashback Badge - Styled to match ProductCategories */}
+      {/* Cashback Badge - Styled to match ProductCategories 
       <Typography
         variant="body2"
         color="white"
@@ -175,7 +176,7 @@ const DealsAndOffers = () => {
     <Box paddingX={10} paddingY={2}>
       <Paper elevation={1} sx={{ overflow: "hidden", borderRadius: 1 }}>
         <Grid container spacing={1} alignItems="stretch" gap={5} justifyContent={"center"}>
-          {/* Left section with title and countdown */}
+          {/* Left section with title and countdown 
           <Grid
             item
             xs={12} // Full width on extra-small screens, stacks above products
@@ -203,7 +204,7 @@ const DealsAndOffers = () => {
             </Stack>
           </Grid>
 
-          {/* Product cards - mapped directly as items in the main container */}
+          {/* Product cards - mapped directly as items in the main container 
           {products.map((product) => (
             <Grid
               item
@@ -226,3 +227,5 @@ const DealsAndOffers = () => {
 }
 
 export default DealsAndOffers
+
+*/}

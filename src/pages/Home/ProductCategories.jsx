@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { Box, Card, Typography, CardMedia, Button, Snackbar, Alert, useTheme } from "@mui/material"
 import { Swiper, SwiperSlide } from "swiper/react"
@@ -47,9 +46,10 @@ const ProductCategories = ({ header }) => {
       material: "Plastic",
       seller: "Artist Market",
       price: category.price,
-      cashback: category.price * (category.cashback / 100), // Calculate cashback amount
+      basePrice: category.price, // Store the base price for tier calculations
+      cashbackPercent: category.cashback || 5, // Store the cashback percentage correctly
       image: category.image,
-      itemCode: category.itemCode, // Add item code to cart item
+      itemCode: category.itemCode || `PROD-${Math.floor(Math.random() * 10000)}`,
     }
 
     // Get existing cart items from localStorage or initialize empty array
@@ -62,7 +62,7 @@ const ProductCategories = ({ header }) => {
     localStorage.setItem("cartItems", JSON.stringify(updatedCart))
 
     // Show notification
-    setSnackbarMessage(`${category.name} added to cart!`)
+    setSnackbarMessage(`${category.name} added to cart! You'll earn ${category.cashback || 5}% cashback.`)
     setSnackbarOpen(true)
   }
 
@@ -174,8 +174,8 @@ const ProductCategories = ({ header }) => {
           <Box sx={{ display: "table-row" }}>
             {[
               { label: "1-3 PC", price: category.price },
-              { label: "4-11 PC", price: category.price * 1.05 },
-              { label: "12 PC+", price: category.price * 0.95 },
+              { label: "4-11 PC", price: category.price * 0.95 }, // Changed from 1.05 to 0.95 (5% discount)
+              { label: "12 PC+", price: category.price * 0.9 }, // Changed from 0.95 to 0.90 (10% discount)
             ].map((tier, idx) => (
               <Box
                 key={idx}

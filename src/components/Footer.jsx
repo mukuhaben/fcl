@@ -1,3 +1,4 @@
+
 import { Box, Grid, Typography, Link, IconButton, Stack, useTheme, useMediaQuery } from "@mui/material"
 import FacebookIcon from "@mui/icons-material/Facebook"
 import TwitterIcon from "@mui/icons-material/Twitter"
@@ -96,7 +97,7 @@ export default function Footer() {
                 Information
               </Typography>
               <FooterLink text="Help Center" />
-              <FooterLink text="Money Refund" />
+              <FooterLink text="Refund Policy" />
             </Box>
 
             <Box sx={{ minWidth: "140px", ml: { sm: 12 } }}>

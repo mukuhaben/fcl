@@ -31,7 +31,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Tooltip,
   Alert,
 } from "@mui/material"
 import {
@@ -55,57 +54,65 @@ import sofaChairImage from "../../../assets/images/2.png"
 import kitchenDishesImage from "../../../assets/images/11.png"
 import smartWatchesImage from "../../../assets/images/8.png"
 
-// Mock data for orders
-const mockOrders = [
+// Mock data for orders - will be sorted by date
+const mockOrdersData = [
   {
-    serialNo: 1,
     orderNo: "ORD-2023-001",
     date: "2023-05-15",
     image: softChairsImage,
     productName: "Soft Chair",
     itemCode: "SC001",
-    totalPaid: 80, // Removed decimals
+    totalPaid: 80,
     cashbackPercent: 5,
-    cashbackAmount: 4, // Removed decimals
+    cashbackAmount: 4,
     status: "Completed",
+    etimsInvNo: "INV-2023-001",
   },
   {
-    serialNo: 2,
     orderNo: "ORD-2023-002",
     date: "2023-06-02",
     image: sofaChairImage,
     productName: "Sofa Chair",
     itemCode: "SC002",
-    totalPaid: 150, // Removed decimals
+    totalPaid: 150,
     cashbackPercent: 3,
-    cashbackAmount: 5, // Removed decimals
+    cashbackAmount: 5,
     status: "Pending",
+    etimsInvNo: null,
   },
   {
-    serialNo: 3,
     orderNo: "ORD-2023-003",
     date: "2023-06-10",
     image: kitchenDishesImage,
     productName: "Kitchen Dishes Set",
     itemCode: "KD001",
-    totalPaid: 60, // Removed decimals
+    totalPaid: 60,
     cashbackPercent: 7,
-    cashbackAmount: 4, // Removed decimals
+    cashbackAmount: 4,
     status: "Completed",
+    etimsInvNo: "INV-2023-002",
   },
   {
-    serialNo: 4,
     orderNo: "ORD-2023-004",
     date: "2023-06-18",
     image: smartWatchesImage,
     productName: "Smart Watch",
     itemCode: "SW001",
-    totalPaid: 130, // Removed decimals
+    totalPaid: 130,
     cashbackPercent: 10,
-    cashbackAmount: 13, // Removed decimals
+    cashbackAmount: 13,
     status: "Pending",
+    etimsInvNo: null,
   },
 ]
+
+// Sort orders by date (newest first) and assign serial numbers
+const mockOrders = [...mockOrdersData]
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  .map((order, index) => ({
+    ...order,
+    serialNo: index + 1,
+  }))
 
 // Mock data for inbox messages
 const mockMessages = [
@@ -513,72 +520,68 @@ const AccountPage = () => {
                       <TableCell>Serial No.</TableCell>
                       <TableCell>Order No.</TableCell>
                       <TableCell>Date</TableCell>
-                      <TableCell>Product</TableCell>
-                      <TableCell>Item Code</TableCell>
                       <TableCell align="right">Total Paid</TableCell>
                       <TableCell align="center">Cashback</TableCell>
                       <TableCell align="center">Status</TableCell>
+                      <TableCell align="center">ETIMS INV NO.</TableCell>
                       <TableCell align="center">Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {mockOrders.map((order) => (
-                      <TableRow key={order.serialNo} hover>
-                        <TableCell>{order.serialNo}</TableCell>
-                        <TableCell>{order.orderNo}</TableCell>
-                        <TableCell>{order.date}</TableCell>
-                        <TableCell>
-                          <Box sx={{ display: "flex", alignItems: "center" }}>
-                            <img
-                              src={order.image || "/placeholder.svg"}
-                              alt={order.productName}
-                              style={{ width: 50, height: 50, marginRight: 10, objectFit: "contain" }}
-                            />
-                            {order.productName}
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={order.itemCode}
-                            size="small"
-                            sx={{
-                              fontSize: "0.7rem",
-                              height: "20px",
-                              backgroundColor: "#f0f7ff",
-                              color: theme.palette.primary.main,
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell align="right">{order.totalPaid}/=</TableCell>
-                        <TableCell align="center">
-                          <Tooltip title={`${order.cashbackPercent}% cashback earned`}>
+                    {mockOrders.map((order, index) => {
+                      return (
+                        <TableRow key={order.serialNo} hover>
+                          <TableCell>{order.serialNo}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="text"
+                              color="primary"
+                              onClick={() => navigate(`/order-details/${order.orderNo}`)}
+                              sx={{ textTransform: "none", padding: 0, minWidth: "auto" }}
+                            >
+                              {order.orderNo}
+                            </Button>
+                          </TableCell>
+                          <TableCell>{order.date}</TableCell>
+                          <TableCell align="right">{order.totalPaid}/=</TableCell>
+                          <TableCell align="center">
                             <Chip
                               label={`${order.cashbackAmount}/=`}
                               color="success"
                               size="small"
                               sx={{ fontSize: "0.7rem", height: "20px" }}
                             />
-                          </Tooltip>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={order.status}
-                            color={order.status === "Completed" ? "success" : "warning"}
-                            size="small"
-                            icon={order.status === "Completed" ? <CheckCircle /> : <Schedule />}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => navigate(`/order-details/${order.orderNo}`)}
-                          >
-                            View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell align="center">
+                            <Chip
+                              label={order.status}
+                              color={order.status === "Completed" ? "success" : "warning"}
+                              size="small"
+                              icon={order.status === "Completed" ? <CheckCircle /> : <Schedule />}
+                            />
+                          </TableCell>
+                          <TableCell align="center">
+                            {order.etimsInvNo || (
+                              <Chip
+                                label="Pending"
+                                size="small"
+                                color="default"
+                                sx={{ fontSize: "0.7rem", height: "20px" }}
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell align="center">
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => navigate(`/order-details/${order.orderNo}`)}
+                            >
+                              View
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>

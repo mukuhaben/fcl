@@ -7,11 +7,8 @@ import {
   Grid,
   Button,
   TextField,
-  Divider,
   List,
   ListItem,
-  ListItemText,
-  ListItemIcon,
   Chip,
   IconButton,
   Dialog,
@@ -34,129 +31,120 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tooltip,
 } from "@mui/material"
-import {
-  AccountBalanceWallet,
-  ArrowUpward,
-  History,
-  Close,
-  CheckCircle,
-  LocalAtm,
-  Info,
-  Warning,
-} from "@mui/icons-material"
+import { AccountBalanceWallet, ArrowUpward, History, Close, CheckCircle, Warning } from "@mui/icons-material"
 import { useNavigate } from "react-router-dom"
 
 // Mock cashback transaction data with item codes and percentages
 // Each transaction represents a purchase that earned cashback
-const mockCashbackTransactions = [
+const mockCashbackTransactionsData = [
   {
     id: 1,
-    itemCode: "SC001",
     orderNo: "ORD-2023-001",
-    date: "2023-06-15",
-    productName: "Soft Chair",
-    purchaseAmount: 80, // Rounded to whole number
-    cashbackPercent: 5,
-    cashbackAmount: 4, // Rounded to whole number
+    date: "2023-05-15",
+    items: [
+      {
+        itemCode: "SC001",
+        productName: "Soft Chair",
+        purchaseAmount: 80,
+        cashbackAmount: 4,
+      },
+      {
+        itemCode: "BL001",
+        productName: "Blender",
+        purchaseAmount: 35,
+        cashbackAmount: 3,
+      },
+    ],
+    totalAmount: 115,
+    totalCashback: 7,
     status: "completed",
   },
   {
     id: 2,
-    itemCode: "KM001",
     orderNo: "ORD-2023-002",
-    date: "2023-06-10",
-    productName: "Kitchen Mixer",
-    purchaseAmount: 150, // Rounded to whole number
-    cashbackPercent: 15,
-    cashbackAmount: 23, // Rounded to whole number
+    date: "2023-06-02",
+    items: [
+      {
+        itemCode: "KM001",
+        productName: "Kitchen Mixer",
+        purchaseAmount: 150,
+        cashbackAmount: 23,
+      },
+    ],
+    totalAmount: 150,
+    totalCashback: 23,
     status: "completed",
   },
   {
     id: 3,
-    itemCode: "SW001",
     orderNo: "ORD-2023-003",
-    date: "2023-05-28",
-    productName: "Smart Watch",
-    purchaseAmount: 100, // Rounded to whole number
-    cashbackPercent: 10,
-    cashbackAmount: 10, // Rounded to whole number
-    status: "completed",
-  },
-  {
-    id: 4,
-    itemCode: "BL001",
-    orderNo: "ORD-2023-004",
-    date: "2023-05-20",
-    productName: "Blender",
-    purchaseAmount: 35, // Rounded to whole number
-    cashbackPercent: 8,
-    cashbackAmount: 3, // Rounded to whole number
-    status: "completed",
-  },
-  {
-    id: 5,
-    itemCode: "CM001",
-    orderNo: "ORD-2023-005",
-    date: "2023-05-15",
-    productName: "Coffee Maker",
-    purchaseAmount: 50, // Rounded to whole number
-    cashbackPercent: 12,
-    cashbackAmount: 6, // Rounded to whole number
+    date: "2023-06-10",
+    items: [
+      {
+        itemCode: "SW001",
+        productName: "Smart Watch",
+        purchaseAmount: 100,
+        cashbackAmount: 10,
+      },
+      {
+        itemCode: "CM001",
+        productName: "Coffee Maker",
+        purchaseAmount: 50,
+        cashbackAmount: 6,
+      },
+    ],
+    totalAmount: 150,
+    totalCashback: 16,
     status: "completed",
   },
 ]
+
+// Sort orders by date (newest first)
+const mockCashbackTransactions = [...mockCashbackTransactionsData].sort(
+  (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+)
 
 // Mock withdrawal history
 // Records of when users withdrew their cashback to external payment methods
-const mockWithdrawals = [
+const mockWithdrawalsData = [
   {
     id: 1,
-    type: "withdrawal",
-    amount: 30, // Rounded to whole number
     date: "2023-06-01",
-    status: "completed",
-    method: "M-Pesa",
     reference: "WD-2023-001",
+    safaricomRef: "PXL12345678",
+    method: "M-Pesa",
+    amount: 30,
+    maintenanceCharge: 2,
+    withdrawalCharge: 1.5,
+    status: "completed",
   },
   {
     id: 2,
-    type: "withdrawal",
-    amount: 15, // Rounded to whole number
     date: "2023-05-10",
-    status: "completed",
-    method: "Bank Account",
     reference: "WD-2023-002",
+    safaricomRef: "PXL87654321",
+    method: "M-Pesa",
+    amount: 15,
+    maintenanceCharge: 2,
+    withdrawalCharge: 1,
+    status: "completed",
   },
 ]
 
-// Mock payment methods
-// Available methods for withdrawing cashback
-const mockPaymentMethods = [
-  {
-    id: 1,
-    type: "card",
-    name: "Visa ending in 4242",
-    details: "**** **** **** 4242",
-    expiryDate: "05/25",
-    isDefault: false,
-  },
-  {
-    id: 2,
-    type: "mobile",
-    name: "M-Pesa",
-    details: "+254 722 123 456",
-    isDefault: true,
-  },
-  {
-    id: 3,
-    type: "bank",
-    name: "Bank Account",
-    details: "Equity Bank ****1234",
-    isDefault: false,
-  },
-]
+// Sort withdrawals by date (newest first) and assign serial numbers
+const mockWithdrawals = [...mockWithdrawalsData]
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  .map((withdrawal, index) => ({
+    ...withdrawal,
+    serialNo: index + 1,
+  }))
+
+// Calculate cumulative total withdrawn
+mockWithdrawals.forEach((withdrawal, index) => {
+  const previousTotal = index > 0 ? mockWithdrawals[index - 1].cumulativeTotal : 0
+  withdrawal.cumulativeTotal = previousTotal + withdrawal.amount
+})
 
 const WalletPage = () => {
   const theme = useTheme()
@@ -166,7 +154,7 @@ const WalletPage = () => {
   // Calculate total cashback from transactions
   // This function computes the available balance by subtracting withdrawals from earned cashback
   const calculateTotalCashback = () => {
-    const totalEarned = mockCashbackTransactions.reduce((sum, transaction) => sum + transaction.cashbackAmount, 0)
+    const totalEarned = mockCashbackTransactions.reduce((sum, transaction) => sum + transaction.totalCashback, 0)
     const totalWithdrawn = mockWithdrawals.reduce((sum, withdrawal) => sum + withdrawal.amount, 0)
     return totalEarned - totalWithdrawn
   }
@@ -219,16 +207,26 @@ const WalletPage = () => {
     // Add to withdrawals
     const newWithdrawal = {
       id: mockWithdrawals.length + 1,
-      type: "withdrawal",
-      amount: Math.round(withdrawAmount), // Round to whole number
+      serialNo: 1, // Will be reassigned when sorting
       date: new Date().toISOString().split("T")[0],
-      status: "completed",
-      method: paymentMethod === "1" ? "Visa ending in 4242" : paymentMethod === "2" ? "M-Pesa" : "Bank Account",
       reference: `WD-2023-${mockWithdrawals.length + 1}`,
+      safaricomRef: `PXL${Math.floor(10000000 + Math.random() * 90000000)}`,
+      method: "M-Pesa",
+      amount: Math.round(withdrawAmount),
+      maintenanceCharge: 2,
+      withdrawalCharge: Math.round(withdrawAmount * 0.05), // 5% withdrawal charge
+      status: "completed",
+      cumulativeTotal: 0, // Will be calculated
     }
 
     // In a real app, you would update this in the server/state management
     mockWithdrawals.unshift(newWithdrawal)
+
+    // Recalculate cumulative totals
+    mockWithdrawals.forEach((withdrawal, index) => {
+      const previousTotal = index > 0 ? mockWithdrawals[index - 1].cumulativeTotal : 0
+      withdrawal.cumulativeTotal = previousTotal + withdrawal.amount
+    })
 
     // Reset form and close dialog
     setAmount("")
@@ -249,6 +247,10 @@ const WalletPage = () => {
   const clearErrorMessage = () => {
     setErrorMessage("")
   }
+
+  // Calculate total earned and withdrawn
+  const totalEarned = mockCashbackTransactions.reduce((sum, transaction) => sum + transaction.totalCashback, 0)
+  const totalWithdrawn = mockWithdrawals.reduce((sum, withdrawal) => sum + withdrawal.amount, 0)
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -349,6 +351,73 @@ const WalletPage = () => {
             </Grid>
           </Paper>
 
+          <Paper
+            elevation={1}
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              mb: 3,
+              background: "white",
+            }}
+          >
+            <Typography variant="h6" component="h2" gutterBottom>
+              Cashback Dashboard
+            </Typography>
+
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <Box
+                  sx={{
+                    p: 2,
+                    bgcolor: "#f0f7ff",
+                    borderRadius: 2,
+                    textAlign: "center",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Total Cashback Earned
+                  </Typography>
+                  <Typography variant="h4" color="primary.main" sx={{ fontWeight: "bold" }}>
+                    {Math.round(totalEarned)}/=
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Box
+                  sx={{
+                    p: 2,
+                    bgcolor: "#e8f5e9",
+                    borderRadius: 2,
+                    textAlign: "center",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Available Balance
+                  </Typography>
+                  <Typography variant="h4" color="success.main" sx={{ fontWeight: "bold" }}>
+                    {Math.round(cashbackBalance)}/=
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Cashback Summary:</strong> You've earned a total of {Math.round(totalEarned)}/= in cashback
+                since you started shopping with FirstCraft. Keep shopping to earn more rewards!
+              </Typography>
+            </Box>
+          </Paper>
+
           {/* Transaction History */}
           <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
@@ -377,48 +446,58 @@ const WalletPage = () => {
                       <TableCell>Item Code</TableCell>
                       <TableCell>Product</TableCell>
                       <TableCell align="right">Purchase Amount</TableCell>
-                      <TableCell align="center">Cashback %</TableCell>
                       <TableCell align="right">Cashback Earned</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {mockCashbackTransactions.map((transaction) => (
-                      <TableRow key={transaction.id} hover>
-                        <TableCell>{transaction.date}</TableCell>
-                        <TableCell>{transaction.orderNo}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={transaction.itemCode}
-                            size="small"
-                            sx={{
-                              fontSize: "0.7rem",
-                              height: "20px",
-                              backgroundColor: "#f0f7ff",
-                              color: theme.palette.primary.main,
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>{transaction.productName}</TableCell>
-                        <TableCell align="right">{transaction.purchaseAmount}/=</TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={`${transaction.cashbackPercent}%`}
-                            size="small"
-                            color="error"
-                            sx={{ fontSize: "0.7rem", height: "20px" }}
-                          />
-                        </TableCell>
-                        <TableCell align="right" sx={{ fontWeight: "bold", color: "success.main" }}>
-                          {transaction.cashbackAmount}/=
-                        </TableCell>
-                      </TableRow>
+                    {mockCashbackTransactions.map((order) => (
+                      <React.Fragment key={order.id}>
+                        {order.items.map((item, itemIndex) => (
+                          <TableRow key={`${order.id}-${itemIndex}`} hover>
+                            {itemIndex === 0 && (
+                              <>
+                                <TableCell rowSpan={order.items.length}>{order.date}</TableCell>
+                                <TableCell rowSpan={order.items.length}>{order.orderNo}</TableCell>
+                              </>
+                            )}
+                            <TableCell>
+                              <Chip
+                                label={item.itemCode}
+                                size="small"
+                                sx={{
+                                  fontSize: "0.7rem",
+                                  height: "20px",
+                                  backgroundColor: "#f0f7ff",
+                                  color: theme.palette.primary.main,
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>{item.productName}</TableCell>
+                            <TableCell align="right">{item.purchaseAmount}/=</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: "bold", color: "success.main" }}>
+                              {item.cashbackAmount}/=
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow sx={{ backgroundColor: "rgba(76, 175, 80, 0.08)" }}>
+                          <TableCell colSpan={4} align="right" sx={{ fontWeight: "bold" }}>
+                            Order Total:
+                          </TableCell>
+                          <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                            {order.totalAmount}/=
+                          </TableCell>
+                          <TableCell align="right" sx={{ fontWeight: "bold", color: "success.main" }}>
+                            {order.totalCashback}/=
+                          </TableCell>
+                        </TableRow>
+                      </React.Fragment>
                     ))}
-                    <TableRow sx={{ backgroundColor: "rgba(76, 175, 80, 0.08)" }}>
-                      <TableCell colSpan={6} align="right" sx={{ fontWeight: "bold" }}>
+                    <TableRow sx={{ backgroundColor: "rgba(25, 118, 210, 0.08)" }}>
+                      <TableCell colSpan={5} align="right" sx={{ fontWeight: "bold" }}>
                         Total Cashback Earned:
                       </TableCell>
                       <TableCell align="right" sx={{ fontWeight: "bold", color: "success.main" }}>
-                        {mockCashbackTransactions.reduce((sum, transaction) => sum + transaction.cashbackAmount, 0)}/=
+                        {totalEarned}/=
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -429,11 +508,16 @@ const WalletPage = () => {
                 <Table size={isMobile ? "small" : "medium"}>
                   <TableHead>
                     <TableRow sx={{ backgroundColor: theme.palette.action.hover }}>
+                      <TableCell>Serial No.</TableCell>
                       <TableCell>Date</TableCell>
                       <TableCell>Reference</TableCell>
+                      <TableCell>Safaricom Ref</TableCell>
                       <TableCell>Method</TableCell>
-                      <TableCell>Status</TableCell>
+                      <TableCell>Maintenance Charge</TableCell>
+                      <TableCell>Withdrawal Charge</TableCell>
                       <TableCell align="right">Amount</TableCell>
+                      <TableCell align="right">Total Withdrawn</TableCell>
+                      <TableCell align="center">Status</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -441,34 +525,42 @@ const WalletPage = () => {
                       <>
                         {mockWithdrawals.map((withdrawal) => (
                           <TableRow key={withdrawal.id} hover>
+                            <TableCell>{withdrawal.serialNo}</TableCell>
                             <TableCell>{withdrawal.date}</TableCell>
                             <TableCell>{withdrawal.reference}</TableCell>
+                            <TableCell>{withdrawal.safaricomRef}</TableCell>
                             <TableCell>{withdrawal.method}</TableCell>
-                            <TableCell>
-                              <Chip
-                                label={withdrawal.status}
-                                size="small"
-                                color={withdrawal.status === "completed" ? "success" : "warning"}
-                                sx={{ fontSize: "0.7rem", height: "20px" }}
-                              />
-                            </TableCell>
+                            <TableCell>{withdrawal.maintenanceCharge}/=</TableCell>
+                            <TableCell>{withdrawal.withdrawalCharge}/=</TableCell>
                             <TableCell align="right" sx={{ fontWeight: "bold" }}>
                               {withdrawal.amount}/=
+                            </TableCell>
+                            <TableCell align="right" sx={{ fontWeight: "bold", color: "primary.main" }}>
+                              {withdrawal.cumulativeTotal}/=
+                            </TableCell>
+                            <TableCell align="center">
+                              <Chip
+                                label="Successful"
+                                size="small"
+                                color="success"
+                                sx={{ fontSize: "0.7rem", height: "20px" }}
+                              />
                             </TableCell>
                           </TableRow>
                         ))}
                         <TableRow sx={{ backgroundColor: "rgba(76, 175, 80, 0.08)" }}>
-                          <TableCell colSpan={4} align="right" sx={{ fontWeight: "bold" }}>
+                          <TableCell colSpan={7} align="right" sx={{ fontWeight: "bold" }}>
                             Total Withdrawn:
                           </TableCell>
                           <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                            {mockWithdrawals.reduce((sum, withdrawal) => sum + withdrawal.amount, 0)}/=
+                            {totalWithdrawn}/=
                           </TableCell>
+                          <TableCell colSpan={2}></TableCell>
                         </TableRow>
                       </>
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                        <TableCell colSpan={10} align="center" sx={{ py: 3 }}>
                           <Typography variant="body1" color="text.secondary">
                             No withdrawals yet
                           </Typography>
@@ -536,53 +628,7 @@ const WalletPage = () => {
             >
               Withdraw Cashback
             </Button>
-
-           
           </Paper>
-
-       {/*  {/* Payment Methods *
-          <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-              <Typography variant="h6" component="h2">
-                Withdrawal Methods
-              </Typography>
-              <Tooltip title="You can withdraw your cashback to any of these payment methods">
-                <IconButton size="small">
-                  <Info fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Box>
-
-            <List sx={{ width: "100%" }}>
-              {mockPaymentMethods.map((method) => (
-                <React.Fragment key={method.id}>
-                  <ListItem
-                    alignItems="flex-start"
-                    secondaryAction={
-                      method.isDefault && (
-                        <Chip label="Default" size="small" color="primary" sx={{ height: 20, fontSize: "0.7rem" }} />
-                      )
-                    }
-                  >
-                   <ListItemIcon>
-                      {method.type === "card" ? <LocalAtm /> : method.type === "mobile" ? <LocalAtm /> : <LocalAtm />}
-                    </ListItemIcon>
-                    <ListItemText primary={method.name} secondary={method.details} />
-                  </ListItem>
-                  <Divider variant="inset" component="li" />
-                </React.Fragment> 
-              ))}  
-            </List>
-
-           <Button
-              variant="outlined"
-              fullWidth
-              onClick={() => navigate("/account")}
-              sx={{ mt: 2, textTransform: "none" }}
-            >
-              Manage Payment Methods
-            </Button>  
-          </Paper>   */}
 
           {/* Cashback Information */}
           <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
@@ -611,9 +657,7 @@ const WalletPage = () => {
                 </Typography>
               </ListItem>
               <ListItem sx={{ display: "list-item", p: 0 }}>
-                <Typography variant="body2">
-                  Choose your preferred withdrawal method: M-Pesa.
-                </Typography>
+                <Typography variant="body2">Choose your preferred withdrawal method: M-Pesa.</Typography>
               </ListItem>
             </List>
 
@@ -622,6 +666,60 @@ const WalletPage = () => {
                 Need help with your cashback? Contact our support team at support@firstcraft.com
               </Typography>
             </Alert>
+          </Paper>
+
+          {/* M-Pesa Withdrawal Charges */}
+          <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mt: 3 }}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              M-Pesa Withdrawal Charges
+            </Typography>
+
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <Typography variant="body2">
+                <strong>Note:</strong> M-Pesa withdrawal charges will be borne by the client.
+              </Typography>
+            </Alert>
+
+            <TableContainer component={Paper} variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: theme.palette.action.hover }}>
+                    <TableCell>Amount Range (KSH)</TableCell>
+                    <TableCell align="right">Charge (KSH)</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>100 - 500</TableCell>
+                    <TableCell align="right">1</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>501 - 1,000</TableCell>
+                    <TableCell align="right">1.5</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>1,001 - 2,500</TableCell>
+                    <TableCell align="right">2.5</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>2,501 - 5,000</TableCell>
+                    <TableCell align="right">5</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>5,001 - 10,000</TableCell>
+                    <TableCell align="right">10</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Above 10,000</TableCell>
+                    <TableCell align="right">15</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+              * Charges are subject to change based on Safaricom's policies.
+            </Typography>
           </Paper>
         </Grid>
       </Grid>
@@ -644,7 +742,7 @@ const WalletPage = () => {
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" paragraph>
-            Withdraw your cashback to one of your saved payment methods.
+            Withdraw your cashback to your M-Pesa account.
           </Typography>
 
           <Box sx={{ mb: 2 }}>
@@ -681,12 +779,8 @@ const WalletPage = () => {
 
           <FormControl fullWidth margin="normal">
             <InputLabel>Withdraw To</InputLabel>
-            <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} label="Withdraw To">
-              {mockPaymentMethods.map((method) => (
-                <MenuItem key={method.id} value={method.id}>
-                  {method.name}
-                </MenuItem>
-              ))}
+            <Select value="2" onChange={(e) => setPaymentMethod(e.target.value)} label="Withdraw To">
+              <MenuItem value="2">M-Pesa (+254 722 123 456)</MenuItem>
             </Select>
           </FormControl>
 
@@ -694,7 +788,8 @@ const WalletPage = () => {
             <Box sx={{ display: "flex", alignItems: "flex-start" }}>
               <Warning sx={{ mr: 1, mt: 0.5 }} fontSize="small" />
               <Typography variant="body2">
-                <strong>Important:</strong> Minimum withdrawal amount is KSH 100/=. M-Pesa withdrawals are typically processed instantly.
+                <strong>Important:</strong> Minimum withdrawal amount is KSH 100/=. M-Pesa withdrawals are typically
+                processed instantly. A maintenance charge of KSH 2 and M-Pesa withdrawal charges will apply.
               </Typography>
             </Box>
           </Alert>
@@ -704,12 +799,7 @@ const WalletPage = () => {
           <Button
             variant="contained"
             onClick={handleWithdraw}
-            disabled={
-              !amount ||
-              !paymentMethod ||
-              Number.parseFloat(amount) > cashbackBalance ||
-              Number.parseFloat(amount) < 100
-            }
+            disabled={!amount || Number.parseFloat(amount) > cashbackBalance || Number.parseFloat(amount) < 100}
           >
             Withdraw
           </Button>

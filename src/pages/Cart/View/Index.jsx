@@ -33,6 +33,13 @@ const formatNumberWithCommas = (number) => {
   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 }
 
+// Define pricing tiers
+const PRICING_TIERS = {
+  TIER1: { min: 1, max: 3, adjustment: 1 }, // 1-3 pieces: base price
+  TIER2: { min: 4, max: 11, adjustment: 0.95 }, // 4-11 pieces: 5% lower
+  TIER3: { min: 12, max: Number.POSITIVE_INFINITY, adjustment: 0.9 }, // 12+ pieces: 10% lower
+}
+
 export default function Cart() {
   // Initial cart items data with cashback added
   const initialCartItems = [
@@ -43,7 +50,7 @@ export default function Cart() {
       color: "blue",
       material: "Plastic",
       seller: "Artist Market",
-      price: 79000, // Removed decimals
+      price: 79000, // Base price
       cashbackPercent: 5, // 5% cashback
       image: softChairsImage,
       itemCode: "SC001",
@@ -55,7 +62,7 @@ export default function Cart() {
       color: "blue",
       material: "Plastic",
       seller: "Best factory LLC",
-      price: 39000, // Removed decimals
+      price: 39000, // Base price
       cashbackPercent: 5, // 5% cashback
       image: sofaChairImage,
       itemCode: "TS001",
@@ -67,7 +74,7 @@ export default function Cart() {
       color: "blue",
       material: "Plastic",
       seller: "Artist Market",
-      price: 171000, // Removed decimals
+      price: 171000, // Base price
       cashbackPercent: 5, // 5% cashback
       image: kitchenDishesImage,
       itemCode: "TS002",
@@ -81,10 +88,20 @@ export default function Cart() {
   useEffect(() => {
     const storedCartItems = JSON.parse(localStorage.getItem("cartItems")) || []
     if (storedCartItems.length > 0) {
-      setCartItems(storedCartItems)
+      // Ensure all items have cashbackPercent property
+      const updatedItems = storedCartItems.map((item) => ({
+        ...item,
+        cashbackPercent: item.cashbackPercent || (item.cashback ? Math.round((item.cashback / item.price) * 100) : 5),
+        basePrice: item.basePrice || item.price, // Store the base price for tier calculations
+      }))
+      setCartItems(updatedItems)
     } else {
-      // If no items in localStorage, use the initial items
-      setCartItems(initialCartItems)
+      // If no items in localStorage, use the initial items with basePrice added
+      const itemsWithBasePrice = initialCartItems.map((item) => ({
+        ...item,
+        basePrice: item.price, // Store the base price for tier calculations
+      }))
+      setCartItems(itemsWithBasePrice)
     }
   }, [])
 
@@ -100,14 +117,30 @@ export default function Cart() {
     setQuantities(initialQuantities)
   }, [cartItems])
 
-  // RESPONSIVE CHANGE 2: Add theme and isMobile detection
+  // Add theme and isMobile detection
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
-  const isSmallLaptop = useMediaQuery(theme.breakpoints.down("lg"))
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "lg"))
 
-  // RESPONSIVE CHANGE 3: Add helper function for responsive values
-  const responsiveValue = (mobileValue, desktopValue) => {
-    return isMobile ? mobileValue : desktopValue
+  // Function to get the price tier based on quantity
+  const getPriceTier = (quantity) => {
+    if (quantity >= PRICING_TIERS.TIER3.min) return PRICING_TIERS.TIER3
+    if (quantity >= PRICING_TIERS.TIER2.min) return PRICING_TIERS.TIER2
+    return PRICING_TIERS.TIER1
+  }
+
+  // Function to get the adjusted price based on quantity
+  const getAdjustedPrice = (item, quantity) => {
+    const tier = getPriceTier(quantity)
+    const basePrice = item.basePrice || item.price
+    return Math.round(basePrice * tier.adjustment)
+  }
+
+  // Function to get the tier label
+  const getTierLabel = (quantity) => {
+    if (quantity >= PRICING_TIERS.TIER3.min) return "12+ PC"
+    if (quantity >= PRICING_TIERS.TIER2.min) return "4-11 PC"
+    return "1-3 PC"
   }
 
   // New handlers for increasing and decreasing quantity
@@ -136,25 +169,37 @@ export default function Cart() {
     localStorage.setItem("cartItems", JSON.stringify(updatedCartItems))
   }
 
-  // Calculate order summary
-  const subtotal = cartItems.reduce((sum, item) => {
-    return sum + item.price * (quantities[item.id] || 1)
+  // VAT rate (16%)
+  const VAT_RATE = 0.16
+
+  // Calculate order summary with adjusted prices
+  const subtotalExclVAT = cartItems.reduce((sum, item) => {
+    const quantity = quantities[item.id] || 1
+    const adjustedPrice = getAdjustedPrice(item, quantity)
+    // Calculate price excluding VAT: adjustedPrice / (1 + VAT_RATE)
+    const priceExclVAT = Math.round(adjustedPrice / (1 + VAT_RATE))
+    return sum + priceExclVAT * quantity
   }, 0)
 
-  // Calculate cashback based on percentage
+  // Calculate VAT amount
+  const vatAmount = Math.round(subtotalExclVAT * VAT_RATE)
+
+  // Calculate total (subtotal + VAT)
+  const total = subtotalExclVAT + vatAmount
+
+  // Calculate cashback based on percentage (excluding VAT)
   const calculateCashback = (item, quantity) => {
     const cashbackPercent = item.cashbackPercent || 0
-    return Math.round((item.price * quantity * cashbackPercent) / 100)
+    // Calculate price excluding VAT but use the adjusted price for the actual price
+    const adjustedPrice = getAdjustedPrice(item, quantity)
+    const priceExclVAT = Math.round(adjustedPrice / (1 + VAT_RATE))
+    return Math.round((priceExclVAT * quantity * cashbackPercent) / 100)
   }
 
   const totalCashback = cartItems.reduce((sum, item) => {
-    return sum + calculateCashback(item, quantities[item.id] || 1)
+    const quantity = quantities[item.id] || 1
+    return sum + calculateCashback(item, quantity)
   }, 0)
-
-  // Discount commented out as requested
-  // const discount = 60
-  const tax = 14000
-  const total = subtotal + tax
 
   // Clear cart function
   const clearCart = () => {
@@ -163,31 +208,27 @@ export default function Cart() {
   }
 
   return (
-    // RESPONSIVE CHANGE 4: Add responsive padding
     <Box
       sx={{
-        px: { xs: 2, md: 3 }, // Less horizontal padding on mobile
-        py: { xs: 3, md: 4 }, // Less vertical padding on mobile
+        px: { xs: 2, md: 3 },
+        py: { xs: 3, md: 4 },
       }}
     >
-      {/* RESPONSIVE CHANGE 5: Add responsive typography */}
       <Typography
         variant="h5"
         fontWeight="bold"
         gutterBottom
         sx={{
-          fontSize: { xs: "1.5rem", md: "1.75rem" }, // Smaller on mobile
+          fontSize: { xs: "1.5rem", md: "1.75rem" },
         }}
       >
         My cart ({cartItems.length})
       </Typography>
 
-      {/* RESPONSIVE CHANGE 6: Update Grid container for stacking on mobile */}
       <Grid container spacing={3}>
         {/* Cart Items */}
-        <Grid item xs={12} lg={8}>
+        <Grid item xs={12} sm={isMobile ? 12 : 8}>
           <Paper variant="outlined" sx={{ mb: 3 }}>
-            {/* RESPONSIVE CHANGE 7: Conditional rendering based on screen size */}
             {cartItems.length === 0 ? (
               <Box sx={{ p: 4, textAlign: "center" }}>
                 <Typography variant="h6" color="text.secondary">
@@ -209,140 +250,147 @@ export default function Cart() {
                 </Button>
               </Box>
             ) : isMobile ? (
-              // RESPONSIVE CHANGE 8: Mobile view - Card layout
+              // Mobile view - Card layout
               <Box>
-                {cartItems.map((item) => (
-                  <Paper key={item.id} sx={{ mb: 2, p: 2 }}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={4}>
-                        <Box
-                          component="img"
-                          src={item.image}
-                          alt={item.name}
-                          sx={{
-                            width: "100%",
-                            height: "auto",
-                            objectFit: "contain",
-                          }}
-                        />
-                      </Grid>
-                      <Grid item xs={8}>
-                        <Typography variant="body1" fontWeight="medium" gutterBottom>
-                          {item.name}
-                        </Typography>
-                        {/* Item Code Chip */}
-                        <Chip
-                          label={`Item Code: ${item.itemCode || "N/A"}`}
-                          size="small"
-                          sx={{
-                            mb: 1,
-                            fontSize: "0.85rem", // Increased font size
-                            height: "24px", // Increased height
-                            backgroundColor: "#f0f7ff",
-                            color: theme.palette.primary.main,
-                          }}
-                        />
-                        <Typography variant="body2" color="text.secondary">
-                          Size: {item.size}, Color: {item.color}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          Seller: {item.seller}
-                        </Typography>
-                      </Grid>
+                {cartItems.map((item) => {
+                  const quantity = quantities[item.id] || 1
+                  const adjustedPrice = getAdjustedPrice(item, quantity)
+                  const tierLabel = getTierLabel(quantity)
 
-                      {/* RESPONSIVE CHANGE 9: Horizontal quantity controls for mobile */}
-                      <Grid item xs={6}>
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-                            Qty:
-                          </Typography>
+                  return (
+                    <Paper key={item.id} sx={{ mb: 2, p: 2 }}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={4}>
                           <Box
+                            component="img"
+                            src={item.image}
+                            alt={item.name}
                             sx={{
-                              display: "flex",
-                              flexDirection: "row",
-                              alignItems: "center",
-                              border: "1px solid #c4c4c4",
-                              borderRadius: "4px",
-                              width: "100px",
+                              width: "100%",
+                              height: "auto",
+                              objectFit: "contain",
                             }}
-                          >
-                            <IconButton
-                              size="small"
-                              onClick={() => decreaseQuantity(item.id)}
-                              disabled={quantities[item.id] <= 1}
-                              sx={{
-                                p: 1, // Larger padding for touch targets
-                              }}
-                            >
-                              <KeyboardArrowDown fontSize="small" />
-                            </IconButton>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                flex: 1,
-                                textAlign: "center",
-                                userSelect: "none",
-                                fontSize: "1rem", // Increased font size
-                              }}
-                            >
-                              {quantities[item.id] || 1}
-                            </Typography>
-                            <IconButton
-                              size="small"
-                              onClick={() => increaseQuantity(item.id)}
-                              sx={{
-                                p: 1, // Larger padding for touch targets
-                              }}
-                            >
-                              <KeyboardArrowUp fontSize="small" />
-                            </IconButton>
-                          </Box>
-                        </Box>
-                      </Grid>
-
-                      <Grid item xs={6}>
-                        <Typography variant="body1" fontWeight="bold" align="right" sx={{ fontSize: "1.1rem" }}>
-                          {formatNumberWithCommas(item.price)}/=
-                        </Typography>
-                      </Grid>
-
-                      <Grid item xs={6}>
-                        <Typography variant="body2" color="success.main" sx={{ fontSize: "0.95rem" }}>
-                          Cashback: {formatNumberWithCommas(calculateCashback(item, quantities[item.id] || 1))}/=
-                        </Typography>
-                      </Grid>
-
-                      <Grid item xs={6}>
-                        <Typography variant="body1" fontWeight="bold" align="right" sx={{ fontSize: "1.1rem" }}>
-                          Total: {formatNumberWithCommas(item.price * (quantities[item.id] || 1))}/=
-                        </Typography>
-                      </Grid>
-
-                      {/* RESPONSIVE CHANGE 10: Full-width buttons on mobile */}
-                      <Grid item xs={12}>
-                        <Divider sx={{ my: 1 }} />
-                        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
-                          <Button
-                            variant="outlined"
+                          />
+                        </Grid>
+                        <Grid item xs={8}>
+                          <Typography variant="body1" fontWeight="medium" gutterBottom>
+                            {item.name}
+                          </Typography>
+                          {/* Item Code Chip */}
+                          <Chip
+                            label={`Item Code: ${item.itemCode || "N/A"}`}
                             size="small"
-                            color="error"
-                            onClick={() => removeItem(item.id)}
-                            startIcon={<DeleteOutline />}
                             sx={{
-                              borderRadius: 1,
-                              textTransform: "none",
-                              px: 2, // More horizontal padding for touch targets
-                              py: 1, // More vertical padding for touch targets
-                              fontSize: "0.9rem", // Increased font size
+                              mb: 1,
+                              fontSize: "0.85rem",
+                              height: "24px",
+                              backgroundColor: "#f0f7ff",
+                              color: theme.palette.primary.main,
                             }}
-                          >
-                            Remove
-                          </Button>
-                        </Box>
+                          />
+                          <Typography variant="body2" color="text.secondary">
+                            Size: {item.size}, Color: {item.color}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            Seller: {item.seller}
+                          </Typography>
+                        </Grid>
+
+                        <Grid item xs={6}>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+                              Qty:
+                            </Typography>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                border: "1px solid #c4c4c4",
+                                borderRadius: "4px",
+                                width: "100px",
+                              }}
+                            >
+                              <IconButton
+                                size="small"
+                                onClick={() => decreaseQuantity(item.id)}
+                                disabled={quantities[item.id] <= 1}
+                                sx={{
+                                  p: 1,
+                                }}
+                              >
+                                <KeyboardArrowDown fontSize="small" />
+                              </IconButton>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  flex: 1,
+                                  textAlign: "center",
+                                  userSelect: "none",
+                                  fontSize: "1rem",
+                                }}
+                              >
+                                {quantity}
+                              </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => increaseQuantity(item.id)}
+                                sx={{
+                                  p: 1,
+                                }}
+                              >
+                                <KeyboardArrowUp fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          </Box>
+                        </Grid>
+
+                        <Grid item xs={6}>
+                          <Typography variant="body1" fontWeight="bold" align="right" sx={{ fontSize: "1.1rem" }}>
+                            {formatNumberWithCommas(adjustedPrice)}/=
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" align="right">
+                            per item
+                          </Typography>
+                        </Grid>
+
+                        <Grid item xs={6}>
+                          <Typography variant="body2" color="success.main" sx={{ fontSize: "0.95rem" }}>
+                            Cashback: {formatNumberWithCommas(calculateCashback(item, quantity))}/=
+                          </Typography>
+                        </Grid>
+
+                        <Grid item xs={6}>
+                          <Typography variant="body1" fontWeight="bold" align="right" sx={{ fontSize: "1.1rem" }}>
+                            Total: {formatNumberWithCommas(adjustedPrice * quantity)}/=
+                          </Typography>
+                        </Grid>
+
+                        <Grid item xs={12}>
+                          <Divider sx={{ my: 1 }} />
+                          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              color="error"
+                              onClick={() => removeItem(item.id)}
+                              startIcon={<DeleteOutline />}
+                              sx={{
+                                borderRadius: 1,
+                                textTransform: "none",
+                                px: 2,
+                                py: 1,
+                                fontSize: "0.9rem",
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </Box>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  </Paper>
-                ))}
+                    </Paper>
+                  )
+                })}
               </Box>
             ) : (
               // Desktop view - Table layout
@@ -352,118 +400,123 @@ export default function Cart() {
                     <TableRow>
                       <TableCell colSpan={2}>Product</TableCell>
                       <TableCell align="center">Quantity</TableCell>
-                      <TableCell align="right">Price</TableCell>
-                      <TableCell align="right">Cashback</TableCell>
+                      <TableCell align="right">Unit Price</TableCell>
                       <TableCell align="right">Total</TableCell>
+                      <TableCell align="right">Cashback</TableCell>
                       <TableCell align="center">Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {cartItems.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell sx={{ width: "80px", padding: "16px 8px" }}>
-                          <Box
-                            component="img"
-                            src={item.image}
-                            alt={item.name}
-                            sx={{
-                              width: "100%",
-                              maxWidth: 70,
-                              height: "auto",
-                              objectFit: "contain",
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body1" fontWeight="medium" gutterBottom sx={{ fontSize: "1rem" }}>
-                            {item.name}
-                          </Typography>
-                          {/* Item Code */}
-                          <Chip
-                            label={`Item Code: ${item.itemCode || "N/A"}`}
-                            size="small"
-                            sx={{
-                              mb: 1,
-                              fontSize: "0.85rem", // Increased font size
-                              height: "24px", // Increased height
-                              backgroundColor: "#f0f7ff",
-                              color: theme.palette.primary.main,
-                            }}
-                          />
-                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.95rem" }}>
-                            Size: {item.size}, Color: {item.color}, Material: {item.material || "N/A"}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.95rem" }}>
-                            Seller: {item.seller}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              border: "1px solid #c4c4c4",
-                              borderRadius: "4px",
-                              width: "70px",
-                              margin: "0 auto",
-                            }}
-                          >
-                            <IconButton size="small" onClick={() => increaseQuantity(item.id)} sx={{ p: 0.5 }}>
-                              <KeyboardArrowUp fontSize="small" />
-                            </IconButton>
-                            <Typography
-                              variant="body2"
+                    {cartItems.map((item) => {
+                      const quantity = quantities[item.id] || 1
+                      const adjustedPrice = getAdjustedPrice(item, quantity)
+
+                      return (
+                        <TableRow key={item.id}>
+                          <TableCell sx={{ width: "80px", padding: "16px 8px" }}>
+                            <Box
+                              component="img"
+                              src={item.image}
+                              alt={item.name}
                               sx={{
-                                textAlign: "center",
-                                userSelect: "none",
-                                py: 0.5,
-                                fontSize: "0.95rem", // Increased font size
+                                width: "100%",
+                                maxWidth: 70,
+                                height: "auto",
+                                objectFit: "contain",
                               }}
-                            >
-                              {quantities[item.id] || 1}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body1" fontWeight="medium" gutterBottom sx={{ fontSize: "1rem" }}>
+                              {item.name}
                             </Typography>
-                            <IconButton
+                            {/* Item Code */}
+                            <Chip
+                              label={`Item Code: ${item.itemCode || "N/A"}`}
                               size="small"
-                              onClick={() => decreaseQuantity(item.id)}
-                              disabled={(quantities[item.id] || 1) <= 1}
-                              sx={{ p: 0.5 }}
-                            >
-                              <KeyboardArrowDown fontSize="small" />
-                            </IconButton>
-                          </Box>
-                        </TableCell>
-                        {/* Price with /= and commas */}
-                        <TableCell align="right" sx={{ fontSize: "1rem" }}>
-                          {formatNumberWithCommas(item.price)}/=
-                        </TableCell>
-                        <TableCell align="right" sx={{ color: "success.main", fontSize: "1rem" }}>
-                          {formatNumberWithCommas(calculateCashback(item, quantities[item.id] || 1))}/=
-                        </TableCell>
-                        <TableCell align="right" sx={{ fontWeight: "bold", fontSize: "1rem" }}>
-                          {formatNumberWithCommas(item.price * (quantities[item.id] || 1))}/=
-                        </TableCell>
-                        <TableCell align="center">
-                          <Stack direction="row" spacing={1} justifyContent="center">
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              color="error"
-                              onClick={() => removeItem(item.id)}
                               sx={{
-                                borderRadius: 1,
-                                textTransform: "none",
-                                minWidth: "auto",
-                                px: 1,
-                                fontSize: "0.9rem", // Increased font size
+                                mb: 1,
+                                fontSize: "0.85rem",
+                                height: "24px",
+                                backgroundColor: "#f0f7ff",
+                                color: theme.palette.primary.main,
+                              }}
+                            />
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.95rem" }}>
+                              Size: {item.size}, Color: {item.color}, Material: {item.material || "N/A"}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.95rem" }}>
+                              Seller: {item.seller}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                border: "1px solid #c4c4c4",
+                                borderRadius: "4px",
+                                width: "70px",
+                                margin: "0 auto",
                               }}
                             >
-                              <DeleteOutline fontSize="small" />
-                            </Button>
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              <IconButton size="small" onClick={() => increaseQuantity(item.id)} sx={{ p: 0.5 }}>
+                                <KeyboardArrowUp fontSize="small" />
+                              </IconButton>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  textAlign: "center",
+                                  userSelect: "none",
+                                  py: 0.5,
+                                  fontSize: "0.95rem",
+                                }}
+                              >
+                                {quantity}
+                              </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => decreaseQuantity(item.id)}
+                                disabled={quantity <= 1}
+                                sx={{ p: 0.5 }}
+                              >
+                                <KeyboardArrowDown fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          </TableCell>
+                          {/* Price with /= and commas */}
+                          <TableCell align="right" sx={{ fontSize: "1rem" }}>
+                            {formatNumberWithCommas(adjustedPrice)}/=
+                          </TableCell>
+                          <TableCell align="right" sx={{ fontWeight: "bold", fontSize: "1rem" }}>
+                            {formatNumberWithCommas(adjustedPrice * quantity)}/=
+                          </TableCell>
+                          <TableCell align="right" sx={{ color: "success.main", fontSize: "1rem" }}>
+                            {formatNumberWithCommas(calculateCashback(item, quantity))}/=
+                          </TableCell>
+                          <TableCell align="center">
+                            <Stack direction="row" spacing={1} justifyContent="center">
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                color="error"
+                                onClick={() => removeItem(item.id)}
+                                sx={{
+                                  borderRadius: 1,
+                                  textTransform: "none",
+                                  minWidth: "auto",
+                                  px: 1,
+                                  fontSize: "0.9rem",
+                                }}
+                              >
+                                <DeleteOutline fontSize="small" />
+                              </Button>
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -471,7 +524,6 @@ export default function Cart() {
           </Paper>
 
           {cartItems.length > 0 && (
-            // RESPONSIVE CHANGE 11: Responsive button layout
             <Box
               sx={{
                 display: "flex",
@@ -490,7 +542,7 @@ export default function Cart() {
                   textTransform: "none",
                   bgcolor: "#1976d2",
                   "&:hover": { bgcolor: "#1565c0" },
-                  fontSize: "1rem", // Increased font size
+                  fontSize: "1rem",
                 }}
                 onClick={() => (window.location.href = "/")}
               >
@@ -502,7 +554,7 @@ export default function Cart() {
                 color="primary"
                 onClick={clearCart}
                 fullWidth={isMobile}
-                sx={{ textTransform: "none", fontSize: "1rem" }} // Increased font size
+                sx={{ textTransform: "none", fontSize: "1rem" }}
               >
                 Remove all
               </Button>
@@ -511,8 +563,35 @@ export default function Cart() {
         </Grid>
 
         {/* Order Summary */}
-        <Grid item xs={12} lg={4}>
-          {/* RESPONSIVE CHANGE 15: Sticky order summary on desktop */}
+        <Grid item xs={12} sm={isMobile ? 12 : 4}>
+          {/* Cashback Summary Box */}
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 3,
+              mb: 3,
+              bgcolor: "#f8f9fa",
+              border: "1px solid #e0e0e0",
+            }}
+          >
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              Cashback Summary
+            </Typography>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+              <Typography variant="body1" sx={{ fontSize: "1.05rem" }}>
+                Total Cashback Earned:
+              </Typography>
+              <Typography variant="body1" color="success.main" fontWeight="bold" sx={{ fontSize: "1.05rem" }}>
+                {formatNumberWithCommas(totalCashback)}/=
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.95rem" }}>
+              Cashback is calculated on the price excluding VAT and will be added to your e-wallet after purchase
+              completion.
+            </Typography>
+          </Paper>
+
+          {/* Order Summary Box */}
           <Paper
             variant="outlined"
             sx={{
@@ -522,52 +601,41 @@ export default function Cart() {
               top: { lg: "20px" },
             }}
           >
-            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-              <Typography variant="body1" sx={{ fontSize: "1.05rem" }}>
-                Cashback Earned:
-              </Typography>
-              <Typography variant="body1" color="success.main" sx={{ fontSize: "1.05rem" }}>
-                {formatNumberWithCommas(totalCashback)}/=
-              </Typography>
-            </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2, fontSize: "0.95rem" }}>
-              Cashback will be added to your e-wallet after purchase completion
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              Order Summary
             </Typography>
 
-            <Divider sx={{ my: 2 }} />
-
-            <Stack spacing={1}>
+            <Stack spacing={2} sx={{ mt: 2 }}>
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Typography variant="body1" sx={{ fontSize: "1.05rem" }}>
-                  Subtotal Exclusive vat:
+                  Subtotal (Excl. VAT):
                 </Typography>
                 <Typography variant="body1" sx={{ fontSize: "1.05rem" }}>
-                  {formatNumberWithCommas(subtotal)}/=
+                  {formatNumberWithCommas(subtotalExclVAT)}/=
                 </Typography>
               </Box>
 
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Typography variant="body1" sx={{ fontSize: "1.05rem" }}>
-                  VAT:
+                  VAT (16%):
                 </Typography>
                 <Typography variant="body1" color="primary" sx={{ fontSize: "1.05rem" }}>
-                  + {formatNumberWithCommas(tax)}/=
+                  + {formatNumberWithCommas(vatAmount)}/=
+                </Typography>
+              </Box>
+
+              <Divider sx={{ my: 1 }} />
+
+              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Typography variant="h6" fontWeight="bold">
+                  Total:
+                </Typography>
+                <Typography variant="h6" fontWeight="bold">
+                  {formatNumberWithCommas(total)}/=
                 </Typography>
               </Box>
             </Stack>
 
-            <Divider sx={{ my: 2 }} />
-
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-              <Typography variant="h6" fontWeight="bold">
-                Total:
-              </Typography>
-              <Typography variant="h6" fontWeight="bold">
-                {formatNumberWithCommas(total)}/=
-              </Typography>
-            </Box>
-
-            {/* RESPONSIVE CHANGE 16: Larger checkout button on mobile */}
             <Button
               variant="contained"
               color="success"
@@ -580,12 +648,13 @@ export default function Cart() {
                 fontSize: { xs: "1.1rem", md: "1rem" },
                 bgcolor: "#00a152",
                 "&:hover": { bgcolor: "#00873e" },
+                mt: 3,
               }}
             >
               Checkout
             </Button>
 
-            {/* RESPONSIVE CHANGE 17: Responsive payment icons */}
+            {/* Payment icons */}
             <Box
               sx={{
                 display: "flex",
